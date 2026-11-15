@@ -12,7 +12,7 @@
 - **使い方**: 本人だけが使う。PCのローカル（`127.0.0.1` とSQLite）で動かす（[ADR 0001](docs/decisions/0001-personal-local-web-app.md)）。
 - **リポジトリ**: GitHub で**公開**する。著作物（記事の本文・動画の文字起こし）と秘密情報は、lint・フック・GitHubの設定で、コミットできないようにする（[ADR 0019](docs/decisions/0019-public-repository-safeguards.md)）。
 - **費用**: Claude APIと検索APIの合計を**月500円**のハード上限に収める（[ADR 0007](docs/decisions/0007-monthly-budget-500-yen.md)）。
-- **作り方**: 実装は主に Claude Code が担い、本人はPRをレビューする。そのため、人が見ていなくても lint・テスト・フックで機械的に止まる仕組み（ハーネス）を最初に作る（[process](docs/spec/process.md)）。そのあとは、試作品を縦に一本通すことを優先する（[ADR 0025](docs/decisions/0025-prototype-first-then-auto-investigation.md)）。
+- **作り方**: 実装は主に Claude Code が担い、本人はPRをレビューする。そのため、人が見ていなくても lint・テスト・フックで機械的に止まる仕組み（ハーネス）を最初に作る（[process](docs/spec/process.md)）。そのあとは、本番の部品を作る前に、使い捨ての試作で体験・抽出・自動調査を確かめ、続いて試作品を縦に一本通す（[ADR 0025](docs/decisions/0025-prototype-first-then-auto-investigation.md)、[process: 本番の前の試作](docs/spec/process.md#本番の前の試作使い捨て)）。
 
 ### 基本の流れ
 
