@@ -13,3 +13,7 @@ eval/report.md
 test-results/
 playwright-report/
 *.log
+
+# 使い捨ての試作のデータと結果（実際の記事の引用を含む。ADR 0019・0025）
+spike/data/
+spike/out/
