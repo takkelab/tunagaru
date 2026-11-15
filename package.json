@@ -29,7 +29,8 @@
     "db:seed:fixture": "node tools/scripts/stub.mjs db:seed:fixture 7",
     "seed:wikidata": "node tools/scripts/stub.mjs seed:wikidata 10",
     "spike:ux": "node spike/a-ux/serve.mjs",
-    "spike:extract": "node spike/b-extraction/run.mjs"
+    "spike:extract": "node spike/b-extraction/run.mjs",
+    "spike:search": "node spike/c-search/run.mjs"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "1.8.0",

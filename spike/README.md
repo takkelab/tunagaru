@@ -34,3 +34,18 @@ pnpm spike:extract --only vivi # 1本だけ
 - 流れ: 本文の取得（robots.txt を確認し、Readability で段落に分ける）→ 事前フィルタ → Haiku で抽出（構造化出力）→ 位置を探す照合（完全一致、だめならあいまい一致）。
 - あいまい一致では、仕様の正規化に加えて空白を消す（自動字幕の空白の揺れを吸収するため。試作で足した規則）。
 - 結果は `spike/out/b/` に書く。`review.md` に本人が正誤をつけ、`summary.md` の数値（引用を含まない）を PR に写す。LLMの結果は `runs/` にキャッシュし、同じ本文とプロンプトでは呼ばない。合計が50円を超えそうなら止まる。
+
+## 試作C: 自動調査（`c-search/`）
+
+```sh
+pnpm spike:search --dry-run   # APIを呼ばずに、検索語の一覧と見積もり額を出す
+pnpm spike:search             # 検索する（.env の ANTHROPIC_API_KEY を使う）
+pnpm spike:search --only mico # 1人だけ
+pnpm spike:search --report    # review.md の判定を読み、summary.md を書く
+```
+
+- 起点は `run.mjs` の `SEEDS`（`spike/data/likes.json` の起点ID）。
+- 検索語の型: `人名 インタビュー`、`別名 インタビュー`、`作品名 人名 インタビュー`、`人名 好きな本`、`人名 好きな音楽`、`人名 愛読書`、`人名 影響を受けた`。`worksAs` がある人（例: MICO）は、人名に活動名を添える。
+- 作品名は、`worksAs` がある人は iTunes Search のアルバムとEP（新しい順）、それ以外は Wikidata の出演・著者・演奏（サイトリンクの多い順）から3つ取り、`spike/out/c/works.json` にキャッシュする。
+- 検索は、検索語1つにつき1回だけ呼ぶ（Haiku 5.5 と `web_search_20250305`、`max_uses: 1`）。URL はモデルの答えではなく、検索結果のブロックからそのまま取る。歌詞・ストアのサイトは `blocked_domains` で外す。
+- 結果は `spike/out/c/` に書く。`review.md` に本人が判定（◎ 好きが出てくる発言の記事／○ 発言の記事／× 外れ）をつける。検索結果は `runs/` にキャッシュし、同じ検索語と設定では呼ばない。合計が100円を超えそうなら止まる。
