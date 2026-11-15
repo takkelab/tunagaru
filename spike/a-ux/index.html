@@ -81,6 +81,8 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 80px; }
 .go { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font-size: 13px; }
 .actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
 .others { display: flex; gap: 8px; flex-wrap: wrap; }
+#cy { width: 100%; height: calc(100vh - 120px); min-height: 480px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.graph-help { font-size: 12px; color: var(--muted); margin: 14px 0 8px; }
 .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 22px 18px; padding: 18px 4px 4px; }
 .pcard { cursor: pointer; position: relative; text-align: center; }
 .avatar { width: 104px; height: 104px; margin: 0 auto; border-radius: 50%; overflow: hidden; box-shadow: var(--shadow); background: var(--accent-soft); display: flex; align-items: center; justify-content: center; transition: transform .15s; }
@@ -111,6 +113,7 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 80px; }
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-live="polite"></aside>
 <div class="toast" id="toast" role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
 <script>
 const STORE_NAME = "tunagaru-spike-a3";
 let D, S = { hidden: {}, curious: {}, onlyOverlap: false };
@@ -192,7 +195,7 @@ function tileHtml(t) {
 function renderNav(view) {
   const n = Object.keys(S.curious).length;
   $("nav").innerHTML = `<label class="toggle"><input type="checkbox" id="only" ${S.onlyOverlap ? "checked" : ""}> 重なりだけ</label>
-    <a href="#/" class="${view === "home" ? "on" : ""}">作品</a><a href="#/people" class="${view === "people" ? "on" : ""}">人</a><a href="#/curious" class="${view === "curious" ? "on" : ""}">気になる${n ? ` (${n})` : ""}</a>`;
+    <a href="#/" class="${view === "home" ? "on" : ""}">作品</a><a href="#/people" class="${view === "people" ? "on" : ""}">人</a><a href="#/graph" class="${view === "graph" ? "on" : ""}">つながり</a><a href="#/curious" class="${view === "curious" ? "on" : ""}">気になる${n ? ` (${n})` : ""}</a>`;
   $("only").onchange = (e) => { S.onlyOverlap = e.target.checked; save(); render(); };
 }
 function personSection(s) {
@@ -288,6 +291,64 @@ function evHtml(e, t, withWork = false) {
     <a class="go" href="${link(e)}" target="_blank" rel="noopener">${isVideo ? `▶ ${fmt(e.startSec)} から再生` : "記事のこの箇所を開く ↗"}</a>
   </div>`;
 }
+// つながり（ノード型）: 起点 → 作品 → 作り手。作品名なしの「好き」は起点 → 作り手
+let cy = null;
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function renderGraph() {
+  if (!window.cytoscape) { $("main").innerHTML = '<p class="empty">グラフのライブラリを読み込めませんでした（ネットワークを確認してください）。</p>'; return; }
+  $("main").innerHTML = '<div class="graph-help">点を押すと根拠が開きます。ドラッグで動かせます。ホイールで拡大・縮小。</div><div id="cy"></div>';
+  let ts = visible();
+  if (S.onlyOverlap) ts = ts.filter((t) => overlapN(t.c.id) >= 2);
+  const nodes = new Map(); const edges = new Map();
+  const addNode = (id, data) => { if (!nodes.has(id)) nodes.set(id, { data: { id, ...data } }); };
+  const addEdge = (a, b, kind) => { const id = `${a}->${b}`; if (!edges.has(id)) edges.set(id, { data: { id, source: a, target: b, kind } }); };
+  for (const t of ts) {
+    const sd = seed(t.like.seed);
+    addNode(`s:${sd.id}`, { label: sd.name, kind: "seed", seed: sd.id });
+    addNode(`c:${t.c.id}`, { label: t.c.name, kind: "creator", likeId: t.like.id, name: t.c.name, aliases: t.c.aliases, n: overlapN(t.c.id) });
+    if (t.work) {
+      const wid = `w:${t.c.id}|${t.work}`;
+      addNode(wid, { label: `『${t.work}』`, kind: "work", tile: t.key, domain: t.c.domain, work: t.work, cname: t.c.name });
+      addEdge(`s:${sd.id}`, wid, "like");
+      addEdge(wid, `c:${t.c.id}`, "by");
+    } else {
+      addEdge(`s:${sd.id}`, `c:${t.c.id}`, "like");
+    }
+  }
+  cy = cytoscape({
+    container: $("cy"),
+    elements: [...nodes.values(), ...edges.values()],
+    style: [
+      { selector: "node", style: { label: "data(label)", "font-size": 11, color: cssVar("--ink"), "text-valign": "bottom", "text-margin-y": 5, "text-wrap": "wrap", "text-max-width": 110, "font-family": "Hiragino Sans, Yu Gothic UI, Meiryo, sans-serif" } },
+      { selector: 'node[kind = "seed"]', style: { "background-color": cssVar("--accent"), width: 46, height: 46, "font-size": 14, "font-weight": 700, "text-valign": "center", "text-margin-y": 0, color: "#fff", "text-outline-color": cssVar("--accent"), "text-outline-width": 2 } },
+      { selector: 'node[kind = "work"]', style: { shape: "round-rectangle", width: 44, height: 64, "background-color": cssVar("--accent-soft"), "border-width": 1, "border-color": cssVar("--line") } },
+      { selector: 'node[kind = "creator"]', style: { width: 40, height: 40, "background-color": cssVar("--accent-soft"), "border-width": 2, "border-color": cssVar("--line") } },
+      { selector: 'node[kind = "creator"][n >= 2]', style: { "border-color": cssVar("--accent"), "border-width": 3 } },
+      { selector: "node[img]", style: { "background-image": "data(img)", "background-fit": "cover", "background-image-crossorigin": "null" } },
+      { selector: "edge", style: { width: 1.6, "line-color": cssVar("--accent"), opacity: 0.55, "curve-style": "bezier", "target-arrow-shape": "triangle", "target-arrow-color": cssVar("--accent"), "arrow-scale": 0.7 } },
+      { selector: 'edge[kind = "by"]', style: { width: 1, "line-color": cssVar("--muted"), "line-style": "dashed", "target-arrow-shape": "none", opacity: 0.45 } },
+    ],
+    layout: { name: "cose", animate: false, nodeRepulsion: 9000, idealEdgeLength: 70, nodeOverlap: 20, padding: 30, randomize: true },
+  });
+  cy.on("tap", "node", (e) => {
+    const d = e.target.data();
+    if (d.kind === "seed") location.hash = `#/seed/${d.seed}`;
+    else if (d.kind === "work") openDrawer(d.tile);
+    else openPerson(d.likeId);
+  });
+  // 画像はあとから読み込む（表紙と写真のキャッシュを共有する）
+  cy.nodes('[kind = "work"]').forEach(async (n) => {
+    const d = n.data();
+    const r = await fetch(`/cover?domain=${d.domain}&title=${encodeURIComponent(d.work)}&creator=${encodeURIComponent(d.cname)}`).then((x) => x.json()).catch(() => null);
+    if (r?.url) n.data("img", r.url);
+  });
+  cy.nodes('[kind = "creator"]').forEach(async (n) => {
+    const d = n.data();
+    const q = `name=${encodeURIComponent(d.name)}${d.aliases.map((a) => `&alt=${encodeURIComponent(a)}`).join("")}`;
+    const r = await fetch(`/portrait?${q}`).then((x) => x.json()).catch(() => null);
+    if (r?.url) n.data("img", r.url);
+  });
+}
 const reopen = (k) => (k.startsWith("p:") ? openPerson(k.slice(2)) : openDrawer(k));
 function hiddenSection(ts) {
   if (!ts.length) return "";
@@ -344,6 +405,7 @@ function render() {
   if (h.startsWith("#/seed/")) { renderNav("seed"); renderSeed(h.slice(7)); }
   else if (h === "#/curious") { renderNav("curious"); renderCurious(); }
   else if (h === "#/people") { renderNav("people"); renderPeople(); }
+  else if (h === "#/graph") { renderNav("graph"); renderGraph(); }
   else { renderNav("home"); renderHome(); }
 }
 document.addEventListener("click", (ev) => {
