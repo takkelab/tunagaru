@@ -61,7 +61,10 @@ export function writeReview(dir, runs) {
     urls.forEach((u, i) => {
       const by = u.foundBy.map((f) => `[${f.template}] ${f.rank}位`).join("、");
       lines.push(
-        `### ${i + 1}. ${u.title}`,
+        // タイトルは見出しにしない（末尾の「！」などが markdownlint に当たるため）
+        `### ${run.seed.id}-${i + 1}`,
+        "",
+        u.title,
         "",
         `<!-- seed:${run.seed.id} key:${u.key} -->`,
         `<${u.url}>`,
