@@ -1,5 +1,5 @@
 // 結果を、本人が正誤をつける review.md と、PR に書ける数値（引用なし）の summary.md にする。
-import { writeFileSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const fmtSec = (s) =>
@@ -92,7 +92,9 @@ export function writeReport(dir, summaries, { model, promptVersion }) {
       review.push("");
     }
   }
-  writeFileSync(join(dir, "review.md"), review.join("\n"));
+  // 本人が判定を書き込んだ review.md は上書きしない（新しい結果は review.new.md に出す）
+  const reviewPath = join(dir, existsSync(join(dir, "review.md")) ? "review.new.md" : "review.md");
+  writeFileSync(reviewPath, `${review.join("\n").trimEnd()}\n`);
   const summary = [
     "# 試作B: 数値のまとめ（引用を含まない）",
     "",
