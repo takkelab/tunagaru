@@ -1,0 +1,23 @@
+// R10: docs の書式（docs/spec/architecture.md#lintで強制する設計ルール）
+{
+  "config": {
+    "default": true,
+    // 日本語の長い行を折り返さない
+    "MD013": false,
+    // 同じ見出しは、兄弟でなければ許す（ステップごとの「完了条件」など）
+    "MD024": { "siblings_only": true },
+    // 表の列の幅をそろえない
+    "MD060": false
+  },
+  "globs": ["**/*.md"],
+  "ignores": [
+    // CLAUDE.md は "@AGENTS.md" の1行だけ（ADR 0016）なので、見出しを置けない
+    "CLAUDE.md",
+    "node_modules/**",
+    "coverage/**",
+    "test/fixtures/**",
+    "eval/review/**",
+    "eval/runs/**",
+    "eval/report.md"
+  ]
+}

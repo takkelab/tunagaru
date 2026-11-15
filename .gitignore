@@ -1,0 +1,15 @@
+node_modules/
+coverage/
+dist/
+data/
+.env
+.env.*
+!.env.example
+metrics/latest.json
+test/fixtures/local/
+eval/review/
+eval/runs/
+eval/report.md
+test-results/
+playwright-report/
+*.log

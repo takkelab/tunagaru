@@ -1,0 +1,10 @@
+# R15: 秘密情報の検査（docs/spec/testing.md#秘密情報の検査）
+# gitleaks の既定ルール（Anthropic・GitHub・AWS などのキー）をそのまま使う
+title = "tunagaru"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "ロックファイルの integrity ハッシュは秘密情報ではない"
+paths = ['''(^|/)pnpm-lock\.yaml$''']
