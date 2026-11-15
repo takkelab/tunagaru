@@ -8,7 +8,7 @@
 :root {
   --bg: #f6f3ee; --surface: #fffdf9; --ink: #26231f; --muted: #6f685e; --line: #e4ddd2;
   --accent: #b5532f; --accent-soft: #f5e3d9; --ok: #3f7d4e; --ok-soft: #e1efe3;
-  --warn: #9a6a00; --warn-soft: #f7ecd0; --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 16px rgb(0 0 0 / 4%);
+  --warn: #9a6a00; --warn-soft: #f7ecd0; --mark: #fbe7a1; --shadow: 0 1px 2px rgb(0 0 0 / 8%), 0 6px 18px rgb(0 0 0 / 7%);
   --serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", serif;
   --sans: "Hiragino Sans", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
 }
@@ -16,89 +16,89 @@
   :root {
     --bg: #1b1a18; --surface: #252320; --ink: #ece6dc; --muted: #a79f93; --line: #3a3631;
     --accent: #e4865f; --accent-soft: #3d2a21; --ok: #7fbf8d; --ok-soft: #22342a;
-    --warn: #e0b453; --warn-soft: #3a3020; --shadow: none;
+    --warn: #e0b453; --warn-soft: #3a3020; --mark: #5a4a1a; --shadow: 0 1px 2px rgb(0 0 0 / 40%);
   }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.7 var(--sans); }
 a { color: var(--accent); }
 header { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
-.bar { max-width: 980px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
-.logo { font: 600 18px var(--serif); letter-spacing: .04em; }
+.bar { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.logo { font: 600 18px var(--serif); letter-spacing: .04em; text-decoration: none; color: var(--ink); }
 .logo small { font: 12px var(--sans); color: var(--muted); margin-left: 6px; }
-nav { display: flex; gap: 4px; margin-left: auto; }
+nav { display: flex; gap: 4px; margin-left: auto; align-items: center; }
 nav a { text-decoration: none; color: var(--muted); padding: 4px 10px; border-radius: 999px; }
 nav a.on { color: var(--ink); background: var(--surface); box-shadow: var(--shadow); }
-.seeds { max-width: 980px; margin: 0 auto; padding: 0 16px 12px; display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; padding: 3px 12px; font-size: 13px; cursor: pointer; text-decoration: none; }
-.chip.on { border-color: var(--accent); color: var(--accent); }
-.chip span { color: var(--muted); margin-left: 4px; }
-main { max-width: 980px; margin: 0 auto; padding: 20px 16px 80px; }
-h1 { font: 600 22px var(--serif); margin: 4px 0 4px; }
-.lead { color: var(--muted); margin: 0 0 20px; }
-.card { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); border: 1px solid var(--line); padding: 18px 20px; margin-bottom: 16px; }
-.card-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
-.creator { font: 600 21px var(--serif); }
-.count { font-weight: 600; color: var(--accent); }
-.confirm { font-size: 13px; color: var(--muted); }
-.row { display: grid; grid-template-columns: 9em 1fr; gap: 4px 14px; padding: 12px 0; border-top: 1px dashed var(--line); cursor: pointer; }
-.row:hover { background: color-mix(in srgb, var(--accent-soft) 35%, transparent); }
-.who { font-weight: 600; }
-.who small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
-.quote { font: 16px/1.85 var(--serif); }
-.quote::before { content: "「"; } .quote::after { content: "」"; }
-.meta { grid-column: 2; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--muted); }
-.works { color: var(--ink); }
+.toggle { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; margin-right: 8px; cursor: pointer; }
+main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 80px; }
+.person { margin: 26px 0 8px; }
+.person-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 6px; }
+.person-head a { font: 600 21px var(--serif); color: var(--ink); text-decoration: none; }
+.person-head small { color: var(--muted); }
+.shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 22px 18px; padding: 18px 4px 4px; align-items: end; }
+.tile { cursor: pointer; position: relative; }
+.cover { width: 100%; aspect-ratio: 2 / 3; border-radius: 4px; overflow: hidden; box-shadow: var(--shadow); background: var(--surface); display: flex; align-items: center; justify-content: center; position: relative; transition: transform .15s; }
+.cover.music { aspect-ratio: 1 / 1; }
+.d-head .cover { width: 120px; flex: none; }
+.tile:hover .cover { transform: translateY(-3px); }
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ph { padding: 12px; text-align: center; font: 600 15px/1.5 var(--serif); color: var(--ink); background: repeating-linear-gradient(135deg, var(--accent-soft), var(--accent-soft) 6px, var(--surface) 6px, var(--surface) 12px); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; }
+.ph small { display: block; font: 12px var(--sans); color: var(--muted); margin-top: 6px; }
+.cap { margin-top: 8px; font-size: 13px; line-height: 1.45; }
+.cap b { display: block; font-weight: 600; }
+.cap span { color: var(--muted); }
+.badge { position: absolute; top: 6px; right: 6px; background: var(--accent); color: #fff; font-size: 11px; border-radius: 999px; padding: 1px 7px; z-index: 1; }
+.dot { position: absolute; top: 6px; left: 6px; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); border: 2px solid var(--surface); z-index: 1; }
+.star-mini { position: absolute; bottom: 6px; right: 6px; color: var(--accent); font-size: 16px; z-index: 1; text-shadow: 0 0 3px var(--surface); }
+.empty { color: var(--muted); padding: 24px 0; }
 .tag { font-size: 12px; border-radius: 6px; padding: 0 7px; line-height: 20px; white-space: nowrap; }
 .tag.unv { background: var(--line); color: var(--muted); }
 .tag.ok { background: var(--ok-soft); color: var(--ok); }
 .tag.warn { background: var(--warn-soft); color: var(--warn); }
-.tag.ovl { background: var(--accent-soft); color: var(--accent); }
-.shelf-item { padding: 16px 0; border-top: 1px solid var(--line); cursor: pointer; }
-.shelf-item:first-child { border-top: 0; }
-.shelf-item .quote { font-size: 18px; }
-.shelf-item .meta { margin-top: 6px; }
-.shelf-item .creator { font-size: 16px; }
-.empty { color: var(--muted); padding: 24px 0; }
-.muted-list { margin-top: 24px; font-size: 13px; color: var(--muted); }
-.muted-list button { font-size: 12px; }
-.drawer { position: fixed; inset: 0 0 0 auto; width: min(520px, 100%); background: var(--surface); transform: translateX(100%); visibility: hidden; transition: transform .2s ease; z-index: 10; overflow-y: auto; padding: 22px 22px 60px; }
+.drawer { position: fixed; inset: 0 0 0 auto; width: min(540px, 100%); background: var(--surface); transform: translateX(100%); visibility: hidden; transition: transform .2s ease; z-index: 10; overflow-y: auto; padding: 22px 24px 60px; }
 .drawer.open { transform: none; visibility: visible; box-shadow: -8px 0 30px rgb(0 0 0 / 15%); }
 .scrim { position: fixed; inset: 0; background: rgb(0 0 0 / 25%); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 9; }
 .scrim.open { opacity: 1; pointer-events: auto; }
 .close { float: right; border: 0; background: none; font-size: 22px; color: var(--muted); cursor: pointer; }
-.ev { margin: 18px 0; padding-left: 14px; border-left: 3px solid var(--accent-soft); }
-.ev .quote { font-size: 17px; }
-.ev .tr { color: var(--muted); font-size: 14px; margin-top: 4px; }
-.src { font-size: 13px; margin-top: 6px; }
-.play { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font-size: 13px; }
-.work-line { display: flex; gap: 8px; align-items: center; margin: 4px 0; }
-.star { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; cursor: pointer; padding: 1px 10px; color: var(--muted); }
-.star.on { color: var(--accent); border-color: var(--accent); }
-.actions { display: flex; gap: 8px; margin-top: 20px; flex-wrap: wrap; }
-.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 14px; cursor: pointer; font: inherit; }
+.d-head { display: flex; gap: 18px; align-items: flex-start; margin-bottom: 8px; }
+.d-title { font: 600 22px/1.4 var(--serif); margin: 4px 0; }
+.d-sub { color: var(--muted); font-size: 14px; }
+.links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.btn { border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 14px; text-decoration: none; display: inline-block; }
+.btn.on { color: var(--accent); border-color: var(--accent); }
 .btn.primary { background: var(--ok); border-color: var(--ok); color: #fff; }
 .btn.danger { color: #b33; }
-.kbd { color: var(--muted); font-size: 12px; }
-@media (max-width: 640px) { .row { grid-template-columns: 1fr; } .meta { grid-column: 1; } }
+.sec { font-size: 12px; color: var(--muted); margin: 22px 0 4px; letter-spacing: .05em; }
+.ev { margin: 12px 0 18px; padding-left: 14px; border-left: 3px solid var(--accent-soft); }
+.ev .who { font-weight: 600; font-size: 14px; }
+.ev .q { font: 17px/1.85 var(--serif); }
+.ev .q::before { content: "「"; } .ev .q::after { content: "」"; }
+.ev mark { background: var(--mark); color: inherit; padding: 0 1px; }
+.ev .cm { color: var(--muted); font: 15px/1.8 var(--serif); margin-top: 4px; }
+.ev .cm::before { content: "… "; }
+.ev .tr { color: var(--muted); font-size: 14px; }
+.ev .src { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.go { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font-size: 13px; }
+.actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+.others { display: flex; gap: 8px; flex-wrap: wrap; }
+@media (max-width: 640px) { .shelf { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } }
 </style>
 </head>
 <body>
 <header>
   <div class="bar">
-    <div class="logo">tunagaru<small>試作A・手入力のデータ</small></div>
+    <a class="logo" href="#/">tunagaru<small>試作A・手入力のデータ</small></a>
     <nav id="nav"></nav>
   </div>
-  <div class="seeds" id="seeds"></div>
 </header>
 <main id="main"><p class="empty">読み込み中…</p></main>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-live="polite"></aside>
 <script>
-const KEY = "tunagaru-spike-a";
-let D, S = { status: {}, curious: {} };
-try { S = { ...S, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; } catch {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+const STORE_NAME = "tunagaru-spike-a2";
+let D, S = { status: {}, curious: {}, onlyOverlap: false };
+try { S = { ...S, ...JSON.parse(localStorage.getItem(STORE_NAME) || "{}") }; } catch {}
+const save = () => { try { localStorage.setItem(STORE_NAME, JSON.stringify(S)); } catch {} };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const $ = (id) => document.getElementById(id);
 const seed = (id) => D.seeds.find((s) => s.id === id);
@@ -106,122 +106,147 @@ const creator = (id) => D.creators.find((c) => c.id === id);
 const st = (like) => S.status[like.id] || "unverified";
 const live = () => D.likes.filter((l) => st(l) !== "rejected");
 const fmt = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
-const href = (ev) => { const u = D.sources[ev.source].url; return ev.startSec == null ? u : `${u}${u.includes("?") ? "&" : "?"}t=${ev.startSec}s`; };
-const shopUrl = (c, work) => { const q = encodeURIComponent(`${work} ${c.name}`); return c.domain === "music" ? `https://open.spotify.com/search/${q}` : `https://www.amazon.co.jp/s?k=${q}`; };
-const curiousKey = (c, w) => `${c}|${w}`;
 
-function overlaps() {
-  const by = new Map();
-  for (const l of live()) { if (!by.has(l.creator)) by.set(l.creator, []); by.get(l.creator).push(l); }
-  return [...by.entries()]
-    .map(([cid, likes]) => ({ c: creator(cid), likes, n: new Set(likes.map((l) => l.seed)).size,
-      ok: new Set(likes.filter((l) => st(l) === "approved").map((l) => l.seed)).size,
-      ev: likes.reduce((a, l) => a + l.evidence.length, 0) }))
-    .filter((o) => o.n >= 2)
-    .sort((a, b) => b.n - a.n || b.ok - a.ok || b.ev - a.ev || a.c.name.localeCompare(b.c.name, "ja"));
+// 引用に、作り手か作品の固有名詞が入っているか（入っていない根拠は使わない）
+const names = (c, work) => [c.name, ...c.aliases, ...(work ? [work, ...(c.workAliases?.[work] || [])] : [])];
+const hasNoun = (ev, c) => names(c, ev.work).some((n) => ev.quote.includes(n));
+function highlight(text, ns) {
+  let out = esc(text);
+  for (const n of [...ns].sort((a, b) => b.length - a.length)) out = out.split(esc(n)).join(`<mark>${esc(n)}</mark>`);
+  return out;
 }
-function overlapCount(cid) { return new Set(live().filter((l) => l.creator === cid).map((l) => l.seed)).size; }
-function tags(like) {
-  const t = [st(like) === "approved" ? '<span class="tag ok">確認済み</span>' : '<span class="tag unv">未確認</span>'];
-  const ev = like.evidence;
-  if (ev.some((e) => e.match === "fuzzy")) t.push('<span class="tag warn" title="自動字幕とあいまいに照合した根拠です">要注意・文字起こし</span>');
-  if (ev.some((e) => e.attribution === "third_party")) t.push('<span class="tag warn" title="本人の発言ではなく、記者などの記述です">要注意・第三者の記述</span>');
-  return t.join("");
+function link(ev) {
+  const src = D.sources[ev.source];
+  if (src.kind === "video" && ev.startSec != null) return `${src.url}&t=${ev.startSec}s`;
+  const q = ev.quote.replace(/^[「『]|[」』。]$/g, "");
+  const frag = q.length <= 24 ? encodeURIComponent(q) : `${encodeURIComponent(q.slice(0, 14))},${encodeURIComponent(q.slice(-8))}`;
+  return `${src.url}#:~:text=${frag}`;
 }
-function sourceBit(ev) {
-  const s = D.sources[ev.source];
-  return s.kind === "video" && ev.startSec != null ? `▶ ${fmt(ev.startSec)} から` : esc(s.title.split("（")[0].slice(0, 24));
+const shopUrl = (c, work) => { const q = encodeURIComponent(`${work || ""} ${c.name}`.trim()); return c.domain === "music" ? `https://open.spotify.com/search/${q}` : `https://www.amazon.co.jp/s?k=${q}`; };
+
+// 棚の1マス = 起点 × 作り手 × 作品（作品がなければ「作家として」）
+function tiles(likes) {
+  const out = [];
+  for (const l of likes) {
+    const c = creator(l.creator);
+    const evs = l.evidence.filter((e) => hasNoun(e, c));
+    const byWork = new Map();
+    for (const e of evs) { const k = e.work || ""; if (!byWork.has(k)) byWork.set(k, []); byWork.get(k).push(e); }
+    for (const [w, es] of byWork) out.push({ key: `${l.id}|${w}`, like: l, c, work: w || null, evs: es });
+  }
+  return out;
+}
+const overlapN = (cid) => new Set(live().filter((l) => l.creator === cid && tiles([l]).length).map((l) => l.seed)).size;
+const asWhole = (c) => (c.domain === "music" ? "アーティストとして" : "作家として");
+const risky = (evs) => evs.some((e) => e.attribution === "third_party" || D.sources[e.source].autoCaption);
+
+const coverCache = {};
+function coverHtml(t) {
+  const cls = `cover${t.c.domain === "music" ? " music" : ""}`;
+  const id = `cv-${Math.random().toString(36).slice(2)}`;
+  const k = `${t.c.domain}|${t.work || ""}|${t.c.name}`;
+  const ph = `<div class="ph">${esc(t.work || t.c.name)}<small>${t.work ? esc(t.c.name) : asWhole(t.c)}</small></div>`;
+  queueMicrotask(() => loadCover(id, k, t));
+  return `<div class="${cls}" id="${id}">${coverCache[k] ? `<img src="${esc(coverCache[k])}" alt="">` : ph}</div>`;
+}
+const pending = {};
+async function loadCover(id, k, t) {
+  if (!(k in coverCache)) {
+    pending[k] ??= fetch(`/cover?domain=${t.c.domain}&title=${encodeURIComponent(t.work || "")}&creator=${encodeURIComponent(t.c.name)}`)
+      .then((r) => r.json()).then((j) => j.url).catch(() => null);
+    coverCache[k] = await pending[k];
+  }
+  const el = document.getElementById(id);
+  if (el && coverCache[k] && !el.querySelector("img")) el.innerHTML = `<img src="${esc(coverCache[k])}" alt="">`;
+}
+function tileHtml(t) {
+  const n = overlapN(t.c.id);
+  const ck = t.work ? `${t.c.id}|${t.work}` : "";
+  return `<div class="tile" data-tile="${esc(t.key)}">
+    ${n >= 2 ? `<span class="badge" title="${n}人が${esc(t.c.name)}を挙げています">${n}人</span>` : ""}
+    ${risky(t.evs) ? '<span class="dot" title="要注意の根拠があります"></span>' : ""}
+    ${ck && S.curious[ck] ? '<span class="star-mini">★</span>' : ""}
+    ${coverHtml(t)}
+    <div class="cap"><b>${esc(t.work ? `『${t.work}』` : t.c.name)}</b><span>${esc(t.work ? t.c.name : asWhole(t.c))}</span></div></div>`;
 }
 
 function renderNav(view) {
   const n = Object.keys(S.curious).length;
-  $("nav").innerHTML = `<a href="#/" class="${view === "overlaps" ? "on" : ""}">重なり</a><a href="#/curious" class="${view === "curious" ? "on" : ""}">気になる ${n ? `(${n})` : ""}</a>`;
-  const cur = location.hash.startsWith("#/seed/") ? location.hash.slice(7) : "";
-  $("seeds").innerHTML = D.seeds.map((s) => `<a class="chip ${cur === s.id ? "on" : ""}" href="#/seed/${s.id}">${esc(s.name)}<span>${live().filter((l) => l.seed === s.id).length}</span></a>`).join("");
+  $("nav").innerHTML = `<label class="toggle"><input type="checkbox" id="only" ${S.onlyOverlap ? "checked" : ""}> 重なりだけ</label>
+    <a href="#/" class="${view === "home" ? "on" : ""}">棚</a><a href="#/curious" class="${view === "curious" ? "on" : ""}">気になる${n ? ` (${n})` : ""}</a>`;
+  $("only").onchange = (e) => { S.onlyOverlap = e.target.checked; save(); render(); };
 }
-function renderOverlaps() {
-  const os = overlaps();
-  $("main").innerHTML = `<h1>好きな人たちの重なり</h1>
-    <p class="lead">${D.seeds.length}人の「好き」のうち、2人以上が挙げている作り手が ${os.length} 件あります。</p>
-    ${os.map((o) => `<section class="card">
-      <div class="card-head"><span class="creator">${esc(o.c.name)}</span><span class="count">${o.n}人</span><span class="confirm">確認 ${o.ok}/${o.n}</span></div>
-      ${o.likes.map((l) => { const s = seed(l.seed); const e = l.evidence[0]; return `<div class="row" data-like="${l.id}">
-        <div class="who">${esc(s.name)}<small>${esc(s.role)}</small></div>
-        <div class="quote">${esc(e.translation || e.quote)}</div>
-        <div class="meta"><span class="works">${l.works.length ? l.works.map((w) => `『${esc(w)}』`).join(" ") : "作家として"}</span>
-          <a href="${href(e)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${sourceBit(e)}</a>${tags(l)}</div></div>`; }).join("")}
-    </section>`).join("") || '<p class="empty">まだ重なりはありません。</p>'}`;
+function personSection(s) {
+  let ts = tiles(live().filter((l) => l.seed === s.id));
+  if (S.onlyOverlap) ts = ts.filter((t) => overlapN(t.c.id) >= 2);
+  if (S.onlyOverlap && !ts.length) return "";
+  return `<section class="person"><div class="person-head"><a href="#/seed/${s.id}">${esc(s.name)}</a><small>${esc(s.role)} · ${ts.length}</small></div>
+    <div class="shelf">${ts.map(tileHtml).join("") || '<p class="empty">まだありません</p>'}</div></section>`;
 }
-function renderShelf(id) {
-  const s = seed(id);
-  const mine = D.likes.filter((l) => l.seed === id);
-  const shown = mine.filter((l) => st(l) !== "rejected")
-    .sort((a, b) => (st(b) === "approved") - (st(a) === "approved") || b.evidence.length - a.evidence.length || creator(a.creator).name.localeCompare(creator(b.creator).name, "ja"));
-  const rej = mine.filter((l) => st(l) === "rejected");
-  $("main").innerHTML = `<h1>${esc(s.name)} の棚</h1>
-    <p class="lead">${esc(s.role)}${s.aliases.length ? `・別名: ${s.aliases.map(esc).join("、")}` : ""}・「好き」${shown.length}件</p>
-    <section class="card">${shown.map((l) => { const c = creator(l.creator); const e = l.evidence[0]; const n = overlapCount(l.creator); return `<div class="shelf-item" data-like="${l.id}">
-      <div class="quote">${esc(e.translation || e.quote)}</div>
-      <div class="meta"><span class="creator">${esc(c.name)}</span><span class="works">${l.works.map((w) => `『${esc(w)}』`).join(" ")}</span>
-        <a href="${href(e)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${sourceBit(e)}</a>
-        ${l.evidence.length > 1 ? `<span>ほか${l.evidence.length - 1}件</span>` : ""}${tags(l)}${n >= 2 ? `<span class="tag ovl">重なり ${n}人</span>` : ""}</div></div>`; }).join("") || '<p class="empty">「好き」はまだありません。</p>'}</section>
-    ${rej.length ? `<div class="muted-list">却下した ${rej.length} 件: ${rej.map((l) => `${esc(creator(l.creator).name)} <button class="btn" data-undo="${l.id}">元に戻す</button>`).join(" ")}</div>` : ""}`;
+function renderHome() { $("main").innerHTML = D.seeds.map(personSection).join("") || '<p class="empty">重なっているものはまだありません。</p>'; }
+function renderSeed(id) {
+  const rej = D.likes.filter((l) => l.seed === id && st(l) === "rejected");
+  $("main").innerHTML = personSection(seed(id)) + (rej.length ? `<p class="empty">却下した ${rej.length} 件: ${rej.map((l) => `${esc(creator(l.creator).name)} <button class="btn" data-undo="${l.id}">元に戻す</button>`).join(" ")}</p>` : "");
 }
 function renderCurious() {
-  const items = Object.entries(S.curious).sort((a, b) => b[1] - a[1]).map(([k]) => k.split("|"));
-  $("main").innerHTML = `<h1>気になる作品</h1><p class="lead">☆を付けた作品です。</p><section class="card">${items.map(([cid, w]) => { const c = creator(cid);
-    const who = D.likes.filter((l) => l.creator === cid && l.works.includes(w)).map((l) => seed(l.seed).name);
-    return `<div class="shelf-item"><div class="creator">『${esc(w)}』 <small>${esc(c.name)}</small></div>
-      <div class="meta"><span>${who.map(esc).join("、")} が挙げた</span><a href="${shopUrl(c, w)}" target="_blank" rel="noopener">${c.domain === "music" ? "Spotify で探す" : "Amazon で探す"}</a>
-      <button class="star on" data-star="${esc(cid)}|${esc(w)}">☆ 外す</button></div></div>`; }).join("") || '<p class="empty">まだありません。根拠パネルの作品に☆を付けてください。</p>'}</section>`;
+  const ts = tiles(live()).filter((t) => t.work && S.curious[`${t.c.id}|${t.work}`]);
+  const uniq = [...new Map(ts.map((t) => [`${t.c.id}|${t.work}`, t])).values()];
+  $("main").innerHTML = `<section class="person"><div class="person-head"><a href="#/curious">気になる作品</a><small>☆を付けた作品</small></div>
+    <div class="shelf">${uniq.map(tileHtml).join("") || '<p class="empty">まだありません。表紙を押して☆を付けてください。</p>'}</div></section>`;
 }
 
-let openLike = null;
-function openDrawer(id) {
-  openLike = D.likes.find((l) => l.id === id);
-  const l = openLike, s = seed(l.seed), c = creator(l.creator);
+let openKey = null;
+function openDrawer(key) {
+  const all = tiles(D.likes);
+  const t = all.find((x) => x.key === key);
+  if (!t) return;
+  openKey = key;
+  const ck = t.work ? `${t.c.id}|${t.work}` : "";
+  const others = tiles(live()).filter((x) => x.c.id === t.c.id && x.like.seed !== t.like.seed);
   $("drawer").innerHTML = `<button class="close" data-close>×</button>
-    <div class="kbd">根拠</div><h1>${esc(s.name)} → ${esc(c.name)}</h1>
-    <div>${tags(l)}</div>
-    ${l.evidence.map((e) => { const src = D.sources[e.source]; return `<div class="ev">
-      <div class="quote">${esc(e.quote)}</div>${e.translation ? `<div class="tr">訳: ${esc(e.translation)}</div>` : ""}
-      <div class="src">${e.attribution === "third_party" ? "記者などの記述 · " : "本人の発言 · "}${e.match === "fuzzy" ? "自動字幕とあいまいに照合 · " : ""}${esc(src.title)}</div>
-      ${src.kind === "video" && e.startSec != null ? `<a class="play" href="${href(e)}" target="_blank" rel="noopener">▶ ${fmt(e.startSec)} から再生</a>` : `<a class="src" href="${href(e)}" target="_blank" rel="noopener">記事を開く ↗</a>`}
+    <div class="d-head">${coverHtml(t)}<div>
+      <div class="d-title">${esc(t.work ? `『${t.work}』` : t.c.name)}</div>
+      <div class="d-sub">${esc(t.work ? t.c.name : `${asWhole(t.c)}挙げられています`)}</div>
+      <div class="links">${ck ? `<button class="btn ${S.curious[ck] ? "on" : ""}" data-star="${esc(ck)}">${S.curious[ck] ? "★ 気になる" : "☆ 気になる"}</button>` : ""}
+        <a class="btn" href="${shopUrl(t.c, t.work)}" target="_blank" rel="noopener">${t.c.domain === "music" ? "Spotify で聴く" : "Amazon で見る"} ↗</a></div>
+    </div></div>
+    <div class="sec">${esc(seed(t.like.seed).name)} の言葉</div>
+    ${t.evs.map((e) => { const src = D.sources[e.source]; const isVideo = src.kind === "video" && e.startSec != null; return `<div class="ev">
+      <div class="q">${highlight(e.quote, names(t.c, e.work))}</div>
+      ${e.translation ? `<div class="tr">訳: ${esc(e.translation)}</div>` : ""}
+      ${e.comment ? `<div class="cm">${esc(e.comment)}</div>` : ""}
+      <div class="src">${e.attribution === "third_party" ? '<span class="tag warn">要注意・記者などの記述</span> ' : ""}${src.autoCaption ? '<span class="tag warn">要注意・自動字幕</span> ' : ""}${esc(src.title)}</div>
+      <a class="go" href="${link(e)}" target="_blank" rel="noopener">${isVideo ? `▶ ${fmt(e.startSec)} から再生` : "記事のこの箇所を開く ↗"}</a>
     </div>`; }).join("")}
-    ${l.works.length ? `<div class="kbd">挙げた作品</div>${l.works.map((w) => { const k = curiousKey(c.id, w); return `<div class="work-line">『${esc(w)}』
-      <button class="star ${S.curious[k] ? "on" : ""}" data-star="${esc(k)}">☆ 気になる</button><a href="${shopUrl(c, w)}" target="_blank" rel="noopener">${c.domain === "music" ? "Spotify" : "Amazon"}</a></div>`; }).join("")}` : ""}
-    <div class="actions">
-      <button class="btn primary" data-set="approved">確認した（a）</button>
-      <button class="btn danger" data-set="rejected">違う・却下（r）</button>
-      ${st(l) !== "unverified" ? '<button class="btn" data-set="unverified">未確認に戻す</button>' : ""}
-    </div>`;
+    <div class="actions">${st(t.like) === "approved" ? '<span class="tag ok">確認済み</span>' : '<span class="tag unv">未確認</span>'}
+      <button class="btn primary" data-set="approved">合ってる</button><button class="btn danger" data-set="rejected">違う</button>
+      ${st(t.like) !== "unverified" ? '<button class="btn" data-set="unverified">未確認に戻す</button>' : ""}</div>
+    ${others.length ? `<div class="sec">ほかに ${esc(t.c.name)} を挙げている人</div><div class="others">${others.map((o) => `<button class="btn" data-tile="${esc(o.key)}">${esc(seed(o.like.seed).name)}${o.work ? `：『${esc(o.work)}』` : ""}</button>`).join("")}</div>` : ""}`;
   $("drawer").classList.add("open"); $("scrim").classList.add("open");
 }
-function closeDrawer() { openLike = null; $("drawer").classList.remove("open"); $("scrim").classList.remove("open"); }
-function setStatus(v) { if (!openLike) return; if (v === "unverified") delete S.status[openLike.id]; else S.status[openLike.id] = v; save(); const id = openLike.id; render(); if (v === "rejected") closeDrawer(); else openDrawer(id); }
-
+function closeDrawer() { openKey = null; $("drawer").classList.remove("open"); $("scrim").classList.remove("open"); }
+function setStatus(v) {
+  const t = tiles(D.likes).find((x) => x.key === openKey); if (!t) return;
+  if (v === "unverified") delete S.status[t.like.id]; else S.status[t.like.id] = v;
+  save(); const k = openKey; render(); if (v === "rejected") closeDrawer(); else openDrawer(k);
+}
 function render() {
   const h = location.hash || "#/";
-  if (h.startsWith("#/seed/")) { renderNav("seed"); renderShelf(h.slice(7)); }
+  if (h.startsWith("#/seed/")) { renderNav("seed"); renderSeed(h.slice(7)); }
   else if (h === "#/curious") { renderNav("curious"); renderCurious(); }
-  else { renderNav("overlaps"); renderOverlaps(); }
+  else { renderNav("home"); renderHome(); }
 }
 document.addEventListener("click", (ev) => {
-  const t = ev.target.closest("[data-like],[data-star],[data-set],[data-close],[data-undo]");
+  const t = ev.target.closest("[data-tile],[data-star],[data-set],[data-close],[data-undo]");
   if (!t) return;
-  if (t.dataset.like) openDrawer(t.dataset.like);
-  else if (t.dataset.star) { const k = t.dataset.star; if (S.curious[k]) delete S.curious[k]; else S.curious[k] = Date.now(); save(); render(); if (openLike) openDrawer(openLike.id); }
+  if (t.dataset.tile) openDrawer(t.dataset.tile);
+  else if (t.dataset.star) { const k = t.dataset.star; if (S.curious[k]) delete S.curious[k]; else S.curious[k] = Date.now(); save(); const o = openKey; render(); if (o) openDrawer(o); }
   else if (t.dataset.set) setStatus(t.dataset.set);
   else if (t.dataset.undo) { delete S.status[t.dataset.undo]; save(); render(); }
   else if (t.dataset.close !== undefined) closeDrawer();
 });
 $("scrim").addEventListener("click", closeDrawer);
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeDrawer();
-  if (!openLike) return;
-  if (e.key === "a") setStatus("approved");
-  if (e.key === "r") setStatus("rejected");
-});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
 window.addEventListener("hashchange", () => { closeDrawer(); render(); });
 fetch("/data/likes.json").then((r) => { if (!r.ok) throw new Error("spike/data/likes.json がありません"); return r.json(); })
   .then((d) => { D = d; render(); })
