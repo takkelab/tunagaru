@@ -42,11 +42,18 @@ export function uniqueUrls(run) {
   return [...byKey.values()];
 }
 
-export function writeReview(dir, runs) {
+/** 各検索の上位 top 位までに入ったURL。 */
+export const topUrls = (run, top) =>
+  uniqueUrls(run).filter((u) => u.foundBy.some((f) => f.rank <= top));
+
+const draftKey = (run, u) => `${run.seed.id}|${u.key}`;
+
+export function writeReview(dir, runs, { top, drafts = {} }) {
   const lines = [
     "# 試作C: 集まったURL（判定をつける）",
     "",
-    "各URLの「判定:」のあとに、次のどれかを書く。迷ったら空のままでよい（数えない）。",
+    `各検索の上位${top}位までに入ったURLだけを載せる。「判定:」には Claude Code の下書きが入っている。`,
+    "違っていたら書き換える。迷ったら消して空にする（数えない）。",
     "",
     ...Object.entries(MARKS).map(([m, d]) => `- ${m} ${d}`),
     "",
@@ -54,7 +61,7 @@ export function writeReview(dir, runs) {
     "",
   ];
   for (const run of runs) {
-    const urls = uniqueUrls(run);
+    const urls = topUrls(run, top);
     lines.push(`## ${run.seed.name}（${urls.length}件）`, "");
     const known = run.known.map((k) => `${k.id}: ${k.found ? "見つかった" : "見つからない"}`);
     lines.push(`既知の記事・動画: ${known.join("、") || "なし"}`, "");
@@ -70,7 +77,8 @@ export function writeReview(dir, runs) {
         `<${u.url}>`,
         "",
         `- 見つけた検索語: ${by}${u.page_age ? ` ／ 日付: ${u.page_age}` : ""}`,
-        "- 判定:",
+        `- 判定:${drafts[draftKey(run, u)] ? ` ${drafts[draftKey(run, u)].mark}` : ""}`,
+        ...(drafts[draftKey(run, u)] ? [`- 下書きの理由: ${drafts[draftKey(run, u)].reason}`] : []),
         "",
       );
     });
@@ -99,7 +107,7 @@ export function readJudgments(path) {
 
 const pct = (a, b) => (b ? `${Math.round((a / b) * 100)}%` : "—");
 
-export function writeSummary(dir, runs, marks, { model, configVersion }) {
+export function writeSummary(dir, runs, marks, { model, configVersion, top, drafts = {} }) {
   const tpl = new Map();
   const seedRows = [];
   let totalYen = 0;
@@ -157,6 +165,12 @@ export function writeSummary(dir, runs, marks, { model, configVersion }) {
     "",
     `実費の合計: ${totalYen.toFixed(2)}円（1人あたり ${(totalYen / runs.length).toFixed(2)}円）`,
     `モデルが検索語を変えた回数: ${changed}`,
+    `判定の対象: 各検索の上位${top}位まで`,
+    (() => {
+      const both = Object.entries(drafts).filter(([k]) => marks.has(k));
+      const same = both.filter(([k, d]) => marks.get(k) === d.mark).length;
+      return `Claude Code の下書きと本人の判定が一致: ${same}/${both.length}（${pct(same, both.length)}）`;
+    })(),
     "",
   ];
   writeFileSync(join(dir, "summary.md"), lines.join("\n"));

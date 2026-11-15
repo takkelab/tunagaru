@@ -49,3 +49,4 @@ pnpm spike:search --report    # review.md の判定を読み、summary.md を書
 - 作品名は、`worksAs` がある人は iTunes Search のアルバムとEP（新しい順）、それ以外は Wikidata の出演・著者・演奏（サイトリンクの多い順）から3つ取り、`spike/out/c/works.json` にキャッシュする。
 - 検索は、検索語1つにつき1回だけ呼ぶ（Haiku 5.5 と `web_search_20250305`、`max_uses: 1`）。URL はモデルの答えではなく、検索結果のブロックからそのまま取る。歌詞・ストアのサイトは `blocked_domains` で外す。
 - 結果は `spike/out/c/` に書く。`review.md` に本人が判定（◎ 好きが出てくる発言の記事／○ 発言の記事／× 外れ）をつける。検索結果は `runs/` にキャッシュし、同じ検索語と設定では呼ばない。合計が100円を超えそうなら止まる。
+- 判定は、各検索の上位3位まで（`run.mjs` の `TOP`）に絞る。`--snippets` で本文を取得して抜粋（`snippets.txt`）を作り、Claude Code がそれを読んで下書き（`drafts.json`）を書く。`--review` で下書きを入れた `review.md` を作り、本人が直す。`summary.md` に、下書きと本人の判定が一致した割合を出す。
