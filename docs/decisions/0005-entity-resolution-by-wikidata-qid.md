@@ -21,4 +21,4 @@
 ## 結果とトレードオフ
 
 - 名寄せ待ちの確定作業が発生する（[screens](../spec/screens.md#s7-名寄せ待ちの一覧) のS7）。
-- 統合の処理（付け替えと重複した線の結合）は複雑なので、テストを厚くする（[process ステップ5](../spec/process.md#ステップ5-dbと名寄せstep05-db-resolution)）。
+- 統合の処理（付け替えと重複した線の結合）は複雑なので、テストを厚くする（[process ステップ10](../spec/process.md#ステップ10-統合とグループstep10-merge-groups)）。

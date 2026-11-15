@@ -20,4 +20,4 @@ PCのローカルで、Webアプリ（`127.0.0.1` へのbindとSQLite）とし�
 ## 結果とトレードオフ
 
 - 外出先やスマホからは使えない。
-- 認証がない分、`0.0.0.0` にbindしないことをテストで保証する（[process ステップ7](../spec/process.md#ステップ7-api層step07-api)）。
+- 認証がない分、`0.0.0.0` にbindしないことをテストで保証する（[process ステップ6](../spec/process.md#ステップ6-api層step06-api)）。
