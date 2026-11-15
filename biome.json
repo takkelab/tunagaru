@@ -1,0 +1,81 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**", "!schema", "!test/fixtures", "!coverage", "!pnpm-lock.yaml"]
+  },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "assist": { "enabled": true, "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "suspicious": {
+        "noExplicitAny": "error",
+        "noConsole": { "level": "error", "options": { "allow": [] } }
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["src/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noProcessEnv": "error",
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "fetch": "R8: fetch は src/adapters/ でだけ使えます。ポートを通して呼んでください。docs/spec/architecture.md#lintで強制する設計ルール"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/adapters/**", "src/shared/config/**"],
+      "linter": {
+        "rules": {
+          "style": { "noProcessEnv": "off", "noRestrictedGlobals": "off" }
+        }
+      }
+    },
+    {
+      "includes": ["src/domain/**"],
+      "plugins": ["./tools/lint/biome/no-math-random.grit"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "fetch": "R8: domain では入出力を扱いません。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "process": "R8: domain では process を使えません。値は引数で受け取ってください。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "Date": "R8: domain では Date を使えません。時刻は Clock ポートから引数で受け取ってください。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "setTimeout": "R8: domain ではタイマーを使えません。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "setInterval": "R8: domain ではタイマーを使えません。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "setImmediate": "R8: domain ではタイマーを使えません。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "performance": "R8: domain では時刻を扱いません。docs/spec/architecture.md#lintで強制する設計ルール",
+                  "crypto": "R8: domain では乱数を扱いません。docs/spec/architecture.md#lintで強制する設計ルール"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/cli/**", "tools/**"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    }
+  ]
+}

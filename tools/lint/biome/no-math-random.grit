@@ -1,0 +1,3 @@
+`Math.random($args)` where {
+  register_diagnostic(span=$args, message="R8: domain では Math.random を使えません。乱数は IdGenerator などのポートから引数で受け取ってください。docs/spec/architecture.md#lintで強制する設計ルール")
+}

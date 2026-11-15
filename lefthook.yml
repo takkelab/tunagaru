@@ -1,0 +1,20 @@
+# git フック（docs/spec/process.md#機械による止め方）。弱めるときはADRを書く
+pre-commit:
+  piped: true
+  commands:
+    1_secrets:
+      run: node tools/secrets/gitleaks.mjs git --pre-commit --staged --config .gitleaks.toml --redact --no-banner .
+    2_biome:
+      glob: "*.{ts,tsx,mts,js,mjs,cjs,json,jsonc}"
+      run: pnpm exec biome check --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+    3_typecheck:
+      glob: "*.{ts,tsx,mts}"
+      run: pnpm typecheck
+    4_related_tests:
+      glob: "*.{ts,tsx,mts,mjs}"
+      run: pnpm exec vitest related --run --passWithNoTests {staged_files}
+
+pre-push:
+  commands:
+    check:
+      run: pnpm check
