@@ -10,7 +10,12 @@ function item(r, i) {
   const work = r.work_title ? `『${r.work_title}』` : "";
   const m =
     r.match === "none" ? `破棄: ${r.reason} 類似度 ${r.similarity}` : `${r.match} ${r.similarity}`;
-  const at = r.sec !== null ? ` [${fmtSec(r.sec)}](${r.link})` : "";
+  const at =
+    r.sec === null
+      ? ""
+      : r.link
+        ? ` [${fmtSec(r.sec)}](${r.link})`
+        : ` ${fmtSec(r.sec)}（動画のURLなし）`;
   const lines = [
     `### ${i + 1}. ${who} → ${r.object_name}${work}`,
     "",
@@ -64,7 +69,7 @@ export function writeReport(dir, summaries, { model, promptVersion }) {
     rows.push(
       `| ${s.input.id} | ${s.input.kind} | ${st.statements} | ${st.exact} | ${st.fuzzy} | ${st.dropped} | ${st.notSeed} | ${st.gold} | ${st.goldInFilter} | ${st.goldFound} | ${s.usage.input} | ${s.usage.output} | ${s.yen.toFixed(3)} |`,
     );
-    review.push(`## ${s.input.title}`, "", s.input.url ?? "（URLなし）", "");
+    review.push(`## ${s.input.title}`, "", s.input.url ? `<${s.input.url}>` : "（URLなし）", "");
     const kept = s.results.filter((r) => r.match !== "none");
     const dropped = s.results.filter((r) => r.match === "none");
     kept.forEach((r, i) => {
