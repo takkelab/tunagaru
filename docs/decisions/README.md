@@ -53,4 +53,5 @@
 | [0017](0017-step-branch-pr-and-mechanical-prevention.md) | 1ステップ＝1ブランチ＝1PR、再発防止は機械的な対策を優先する | 採用                           |
 | [0018](0018-schema-generation-and-snapshots.md)          | スキーマ生成とずれ検知、スナップショットテスト              | 採用                           |
 | [0019](0019-public-repository-safeguards.md)             | リポジトリを公開し、著作物と秘密情報の流出を機械的に防ぐ    | 採用                           |
-| [0020](0020-harness-implementation-details.md)           | ハーネスの実装上の細かな決定                                | 提案                           |
+| [0020](0020-harness-implementation-details.md)           | ハーネスの実装上の細かな決定                                | 採用                           |
+| [0021](0021-main-branch-protection.md)                   | main をブランチ保護し、CIの通過を必須にする                 | 採用                           |

@@ -29,6 +29,7 @@
 | lefthook の pre-push              | push の直前                       | `pnpm check`                                                                                                                                                                                                                                                                  |
 | GitHub Actions                    | push と PR                        | `pnpm install --frozen-lockfile`、`pnpm secrets`、`pnpm check`、`pnpm e2e`（Ubuntu と Windows の2系統）。`permissions` は読み取りのみ、action はSHAで固定する                                                                                                                 |
 | GitHub の設定                     | push のとき                       | secret scanning と push protection。forkからのPRのワークフロー実行には承認を必須にする                                                                                                                                                                                        |
+| ブランチ保護（main）              | マージのとき                      | CI（Ubuntu と Windows）の通過を必須にし、管理者にも適用する。force push と削除を禁止する（[ADR 0021](../decisions/0021-main-branch-protection.md)）                                                                                                                           |
 
 リポジトリは公開する。著作物と秘密情報を公開しないための対策は [ADR 0019](../decisions/0019-public-repository-safeguards.md) に従う。どれも必須で、外してはいけない。
 
