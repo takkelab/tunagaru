@@ -81,6 +81,13 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 80px; }
 .go { display: inline-block; margin-top: 6px; padding: 3px 12px; border-radius: 999px; background: var(--accent); color: #fff; text-decoration: none; font-size: 13px; }
 .actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
 .others { display: flex; gap: 8px; flex-wrap: wrap; }
+.hint { font-size: 12px; color: var(--muted); }
+.hidden-list { margin: 36px 0 0; color: var(--muted); font-size: 14px; }
+.hidden-list summary { cursor: pointer; }
+.hidden-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; display: flex; gap: 12px; align-items: center; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; font-size: 14px; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast .btn { padding: 2px 10px; }
 @media (max-width: 640px) { .shelf { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); } }
 </style>
 </head>
@@ -94,17 +101,16 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 80px; }
 <main id="main"><p class="empty">読み込み中…</p></main>
 <div class="scrim" id="scrim"></div>
 <aside class="drawer" id="drawer" aria-live="polite"></aside>
+<div class="toast" id="toast" role="status"></div>
 <script>
-const STORE_NAME = "tunagaru-spike-a2";
-let D, S = { status: {}, curious: {}, onlyOverlap: false };
+const STORE_NAME = "tunagaru-spike-a3";
+let D, S = { hidden: {}, curious: {}, onlyOverlap: false };
 try { S = { ...S, ...JSON.parse(localStorage.getItem(STORE_NAME) || "{}") }; } catch {}
 const save = () => { try { localStorage.setItem(STORE_NAME, JSON.stringify(S)); } catch {} };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const $ = (id) => document.getElementById(id);
 const seed = (id) => D.seeds.find((s) => s.id === id);
 const creator = (id) => D.creators.find((c) => c.id === id);
-const st = (like) => S.status[like.id] || "unverified";
-const live = () => D.likes.filter((l) => st(l) !== "rejected");
 const fmt = (sec) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, "0")}`;
 
 // 引用に、作り手か作品の固有名詞が入っているか（入っていない根拠は使わない）
@@ -136,7 +142,11 @@ function tiles(likes) {
   }
   return out;
 }
-const overlapN = (cid) => new Set(live().filter((l) => l.creator === cid && tiles([l]).length).map((l) => l.seed)).size;
+// 非表示にしたマスは、棚にも重なりの人数にも数えない
+const allTiles = () => tiles(D.likes);
+const visible = () => allTiles().filter((t) => !S.hidden[t.key]);
+const overlapN = (cid) => new Set(visible().filter((t) => t.c.id === cid).map((t) => t.like.seed)).size;
+const tileName = (t) => (t.work ? `『${t.work}』` : t.c.name);
 const asWhole = (c) => (c.domain === "music" ? "アーティストとして" : "作家として");
 const risky = (evs) => evs.some((e) => e.attribution === "third_party" || D.sources[e.source].autoCaption);
 
@@ -177,19 +187,22 @@ function renderNav(view) {
   $("only").onchange = (e) => { S.onlyOverlap = e.target.checked; save(); render(); };
 }
 function personSection(s) {
-  let ts = tiles(live().filter((l) => l.seed === s.id));
+  let ts = visible().filter((t) => t.like.seed === s.id);
   if (S.onlyOverlap) ts = ts.filter((t) => overlapN(t.c.id) >= 2);
   if (S.onlyOverlap && !ts.length) return "";
   return `<section class="person"><div class="person-head"><a href="#/seed/${s.id}">${esc(s.name)}</a><small>${esc(s.role)} · ${ts.length}</small></div>
     <div class="shelf">${ts.map(tileHtml).join("") || '<p class="empty">まだありません</p>'}</div></section>`;
 }
-function renderHome() { $("main").innerHTML = D.seeds.map(personSection).join("") || '<p class="empty">重なっているものはまだありません。</p>'; }
-function renderSeed(id) {
-  const rej = D.likes.filter((l) => l.seed === id && st(l) === "rejected");
-  $("main").innerHTML = personSection(seed(id)) + (rej.length ? `<p class="empty">却下した ${rej.length} 件: ${rej.map((l) => `${esc(creator(l.creator).name)} <button class="btn" data-undo="${l.id}">元に戻す</button>`).join(" ")}</p>` : "");
+function hiddenSection(ts) {
+  if (!ts.length) return "";
+  return `<details class="hidden-list"><summary>非表示にしたもの（${ts.length}件）</summary>
+    ${ts.map((t) => `<div class="hidden-row"><span>${esc(seed(t.like.seed).name)}：${esc(tileName(t))}</span><button class="btn" data-unhide="${esc(t.key)}">戻す</button></div>`).join("")}</details>`;
 }
+const hiddenTiles = (seedId) => allTiles().filter((t) => S.hidden[t.key] && (!seedId || t.like.seed === seedId));
+function renderHome() { $("main").innerHTML = (D.seeds.map(personSection).join("") || '<p class="empty">重なっているものはまだありません。</p>') + hiddenSection(hiddenTiles()); }
+function renderSeed(id) { $("main").innerHTML = personSection(seed(id)) + hiddenSection(hiddenTiles(id)); }
 function renderCurious() {
-  const ts = tiles(live()).filter((t) => t.work && S.curious[`${t.c.id}|${t.work}`]);
+  const ts = visible().filter((t) => t.work && S.curious[`${t.c.id}|${t.work}`]);
   const uniq = [...new Map(ts.map((t) => [`${t.c.id}|${t.work}`, t])).values()];
   $("main").innerHTML = `<section class="person"><div class="person-head"><a href="#/curious">気になる作品</a><small>☆を付けた作品</small></div>
     <div class="shelf">${uniq.map(tileHtml).join("") || '<p class="empty">まだありません。表紙を押して☆を付けてください。</p>'}</div></section>`;
@@ -202,7 +215,7 @@ function openDrawer(key) {
   if (!t) return;
   openKey = key;
   const ck = t.work ? `${t.c.id}|${t.work}` : "";
-  const others = tiles(live()).filter((x) => x.c.id === t.c.id && x.like.seed !== t.like.seed);
+  const others = visible().filter((x) => x.c.id === t.c.id && x.like.seed !== t.like.seed);
   $("drawer").innerHTML = `<button class="close" data-close>×</button>
     <div class="d-head">${coverHtml(t)}<div>
       <div class="d-title">${esc(t.work ? `『${t.work}』` : t.c.name)}</div>
@@ -218,18 +231,24 @@ function openDrawer(key) {
       <div class="src">${e.attribution === "third_party" ? '<span class="tag warn">要注意・記者などの記述</span> ' : ""}${src.autoCaption ? '<span class="tag warn">要注意・自動字幕</span> ' : ""}${esc(src.title)}</div>
       <a class="go" href="${link(e)}" target="_blank" rel="noopener">${isVideo ? `▶ ${fmt(e.startSec)} から再生` : "記事のこの箇所を開く ↗"}</a>
     </div>`; }).join("")}
-    <div class="actions">${st(t.like) === "approved" ? '<span class="tag ok">確認済み</span>' : '<span class="tag unv">未確認</span>'}
-      <button class="btn primary" data-set="approved">合ってる</button><button class="btn danger" data-set="rejected">違う</button>
-      ${st(t.like) !== "unverified" ? '<button class="btn" data-set="unverified">未確認に戻す</button>' : ""}</div>
+    <div class="actions">${S.hidden[t.key]
+      ? `<button class="btn" data-unhide="${esc(t.key)}">非表示を解除する</button>`
+      : `<button class="btn" data-hide="${esc(t.key)}">非表示にする</button><span class="hint">違うと思ったら</span>`}</div>
     ${others.length ? `<div class="sec">ほかに ${esc(t.c.name)} を挙げている人</div><div class="others">${others.map((o) => `<button class="btn" data-tile="${esc(o.key)}">${esc(seed(o.like.seed).name)}${o.work ? `：『${esc(o.work)}』` : ""}</button>`).join("")}</div>` : ""}`;
   $("drawer").classList.add("open"); $("scrim").classList.add("open");
 }
 function closeDrawer() { openKey = null; $("drawer").classList.remove("open"); $("scrim").classList.remove("open"); }
-function setStatus(v) {
-  const t = tiles(D.likes).find((x) => x.key === openKey); if (!t) return;
-  if (v === "unverified") delete S.status[t.like.id]; else S.status[t.like.id] = v;
-  save(); const k = openKey; render(); if (v === "rejected") closeDrawer(); else openDrawer(k);
+let toastTimer;
+function toast(html) {
+  $("toast").innerHTML = html; $("toast").classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $("toast").classList.remove("show"), 7000);
 }
+function hide(key) {
+  const t = allTiles().find((x) => x.key === key); if (!t) return;
+  S.hidden[key] = Date.now(); save(); closeDrawer(); render();
+  toast(`${esc(seed(t.like.seed).name)} の ${esc(tileName(t))} を非表示にしました <button class="btn" data-unhide="${esc(key)}">元に戻す</button>`);
+}
+function unhide(key) { delete S.hidden[key]; save(); $("toast").classList.remove("show"); const o = openKey; render(); if (o) openDrawer(o); }
 function render() {
   const h = location.hash || "#/";
   if (h.startsWith("#/seed/")) { renderNav("seed"); renderSeed(h.slice(7)); }
@@ -237,12 +256,12 @@ function render() {
   else { renderNav("home"); renderHome(); }
 }
 document.addEventListener("click", (ev) => {
-  const t = ev.target.closest("[data-tile],[data-star],[data-set],[data-close],[data-undo]");
+  const t = ev.target.closest("[data-tile],[data-star],[data-hide],[data-unhide],[data-close]");
   if (!t) return;
   if (t.dataset.tile) openDrawer(t.dataset.tile);
   else if (t.dataset.star) { const k = t.dataset.star; if (S.curious[k]) delete S.curious[k]; else S.curious[k] = Date.now(); save(); const o = openKey; render(); if (o) openDrawer(o); }
-  else if (t.dataset.set) setStatus(t.dataset.set);
-  else if (t.dataset.undo) { delete S.status[t.dataset.undo]; save(); render(); }
+  else if (t.dataset.hide) hide(t.dataset.hide);
+  else if (t.dataset.unhide) unhide(t.dataset.unhide);
   else if (t.dataset.close !== undefined) closeDrawer();
 });
 $("scrim").addEventListener("click", closeDrawer);
