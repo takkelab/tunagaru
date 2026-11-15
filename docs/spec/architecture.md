@@ -9,12 +9,12 @@
 | 言語・実行環境 | TypeScript（`strict`、`noUncheckedIndexedAccess`）、Node.js 22 LTS                                                                                                         |
 | パッケージ管理 | pnpm（単一パッケージ。[ADR 0012](../decisions/0012-single-package-layered-folders.md)）                                                                                    |
 | APIサーバー    | Hono＋`@hono/node-server`（`127.0.0.1:8787`）                                                                                                                              |
-| UI             | Vite＋React、Cytoscape.js＋`cytoscape-fcose`                                                                                                                               |
+| UI             | Vite＋React（グラフ表示の Cytoscape.js は保留。[ADR 0022](../decisions/0022-overlaps-of-seed-people-as-core.md)）                                                          |
 | DB             | SQLite（better-sqlite3）＋Drizzle ORM／drizzle-kit                                                                                                                         |
 | バリデーション | Zod（API契約とLLMの構造化出力）                                                                                                                                            |
 | LLM            | `@anthropic-ai/sdk`。既定のモデルは `claude-haiku-5-5`、構造化出力（`output_config.format`）を使う。モデルは設定で `claude-sonnet-5-5`／`claude-opus-5-5` に切り替えられる |
 | 本文の抽出     | `@mozilla/readability`＋`linkedom`                                                                                                                                         |
-| 外部データ     | Wikidata（SPARQL・`wbsearchentities`）、Wikipedia（REST・Action API、ja/en）、MusicBrainz                                                                                  |
+| 外部データ     | Wikidata（SPARQL・`wbsearchentities`）、記事のURL、Claude の Web 検索ツール（ステップ8）、Wikipedia（REST・Action API、ja/en。ステップ9）、MusicBrainz（ステップ10）       |
 | テスト         | Vitest（単体・統合・スナップショット・カバレッジ）、Playwright（E2E）                                                                                                      |
 | 検査           | Biome（lintとformat）、dependency-cruiser（層の境界）、markdownlint-cli2（docs）、`tools/lint/`（独自lint）                                                                |
 | フック・CI     | Claude Code のフック（`.claude/settings.json`）、lefthook（git）、GitHub Actions                                                                                           |
@@ -35,16 +35,16 @@ Windows 11 で動くこと。npm scripts の中ではシェル固有の構文（
   src/cli/commands  ──► src/app, src/shared
 ```
 
-| 層                     | 置くもの                                                                                                                                         | 依存してよい先                                        |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- |
-| `src/domain/`          | 列挙値、引用照合と正規化、極性の表示ルール、並び順、予算計算、事前フィルタ、名寄せの判定ロジック。**入出力も時刻も乱数も扱わない**               | なし（外部パッケージも使わない）                      |
-| `src/app/`             | ユースケース（検索、調査、名寄せ、統合、展開、承認）と、ポート（`EntityRepo`、`LlmExtractor`、`WikidataClient`、`Clock` などのインターフェース） | `domain`                                              |
-| `src/adapters/`        | ポートの実装。`db/`、`wikidata/`、`wikipedia/`、`musicbrainz/`、`web/`（URLの取得とReadability）、`anthropic/`、`search/`、`clock/`              | `domain`、`app` のポート定義（`src/app/ports/`）      |
-| `src/shared/contract/` | APIとLLM出力の Zod スキーマと、そこから導いた型                                                                                                  | `domain`（列挙値の再利用のみ）、`zod`                 |
-| `src/shared/config/`   | 設定と環境変数の読み込み                                                                                                                         | `zod`                                                 |
-| `src/server/`          | Honoのルート（`routes/`）と composition root（`main.ts`）                                                                                        | `app`、`shared`。adapters を使えるのは `main.ts` だけ |
-| `src/cli/`             | コマンド（`commands/`）と composition root（`main.ts`）                                                                                          | `app`、`shared`。adapters を使えるのは `main.ts` だけ |
-| `src/web/`             | React UI                                                                                                                                         | `shared/contract` のみ                                |
+| 層                     | 置くもの                                                                                                                                                 | 依存してよい先                                        |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `src/domain/`          | 列挙値、引用照合と正規化、極性の表示ルール、並び順、予算計算、事前フィルタ、名寄せの判定ロジック。**入出力も時刻も乱数も扱わない**                       | なし（外部パッケージも使わない）                      |
+| `src/app/`             | ユースケース（検索、起点、調査、名寄せ、統合、重なり、確認）と、ポート（`EntityRepo`、`LlmExtractor`、`WikidataClient`、`Clock` などのインターフェース） | `domain`                                              |
+| `src/adapters/`        | ポートの実装。`db/`、`wikidata/`、`wikipedia/`、`musicbrainz/`、`web/`（URLの取得とReadability）、`anthropic/`、`search/`、`clock/`                      | `domain`、`app` のポート定義（`src/app/ports/`）      |
+| `src/shared/contract/` | APIとLLM出力の Zod スキーマと、そこから導いた型                                                                                                          | `domain`（列挙値の再利用のみ）、`zod`                 |
+| `src/shared/config/`   | 設定と環境変数の読み込み                                                                                                                                 | `zod`                                                 |
+| `src/server/`          | Honoのルート（`routes/`）と composition root（`main.ts`）                                                                                                | `app`、`shared`。adapters を使えるのは `main.ts` だけ |
+| `src/cli/`             | コマンド（`commands/`）と composition root（`main.ts`）                                                                                                  | `app`、`shared`。adapters を使えるのは `main.ts` だけ |
+| `src/web/`             | React UI                                                                                                                                                 | `shared/contract` のみ                                |
 
 ## lintで強制する設計ルール
 

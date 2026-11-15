@@ -31,10 +31,10 @@
 
 リポジトリは公開する（[ADR 0019](../decisions/0019-public-repository-safeguards.md)）。記事の本文は著作物なので、**コミットしてよい本文を次の2種類に限る**。
 
-| 出どころ                               | 使ってよい場所                                                                                                | 記録すること                                                             |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `wikipedia`／`wikidata`／`musicbrainz` | Wikipedia・Wikidata・MusicBrainz アダプタの cassette、本文のfixture、それらを入力にした Anthropic の cassette | URL、revision id（Wikipedia）、取得日、ライセンス（CC BY-SA または CC0） |
-| `synthetic`（自分で書いた架空の文章）  | URL取得アダプタ（架空のHTML）、Web検索アダプタ（架空の検索結果）、事前フィルタと照合器のテスト、E2E の seed   | 「架空」と明記する。実在の人物名は使ってよいが、発言の内容は架空にする   |
+| 出どころ                               | 使ってよい場所                                                                                                                                              | 記録すること                                                             |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `wikipedia`／`wikidata`／`musicbrainz` | Wikipedia・Wikidata・MusicBrainz アダプタの cassette、本文のfixture、それらを入力にした Anthropic の cassette                                               | URL、revision id（Wikipedia）、取得日、ライセンス（CC BY-SA または CC0） |
+| `synthetic`（自分で書いた架空の文章）  | URL取得アダプタ（架空のHTML）、Web検索アダプタ（架空の検索結果）、動画の文字起こし（架空の発言とタイムスタンプ）、事前フィルタと照合器のテスト、E2E の seed | 「架空」と明記する。実在の人物名は使ってよいが、発言の内容は架空にする   |
 
 - すべてのfixtureを `test/fixtures/PROVENANCE.json` に登録する。未登録のfixtureがあると、`tools/lint/fixture-provenance.mjs`（[R14](architecture.md#lintで強制する設計ルール)）が `pnpm lint` を失敗させる。
 - Anthropic の cassette には、リクエスト本文（＝LLMに送った記事の本文）がそのまま入る。そのため、入力本文が登録済みのWikipediaの本文か synthetic のときだけ録画を許す。R14 でも、入力本文の照合を検査する。
@@ -54,7 +54,7 @@
 対象は次のとおり。いずれも、意図しない変化を差分としてレビューで見せるために使う。
 
 - LLMに送るプロンプトの全文（システムプロンプトと、事前フィルタ後のユーザー入力の組み立て）
-- CLIの出力（`budget`、`extract --dry-run`、`investigate --dry-run`）
+- CLIの出力（`budget`、`overlaps`、`extract --dry-run`、`investigate --dry-run`）
 - 評価レポートの形式（数値はfixtureで固定する）
 - 生成した JSON Schema（`schema/`。こちらは [api](api.md#契約とスキーマのずれ検知) のずれ検知で扱う）
 
@@ -64,7 +64,7 @@
 
 | コマンド         | 内容                                                                               | 必要なもの                      |
 | ---------------- | ---------------------------------------------------------------------------------- | ------------------------------- |
-| `pnpm test:live` | 実APIを少数だけ呼ぶスモークテスト（Wikidata検索、Wikipedia取得、Haikuで1回抽出）   | `ANTHROPIC_API_KEY`、予算の残り |
+| `pnpm test:live` | 実APIを少数だけ呼ぶスモークテスト（Wikidata検索、URL取得、Haikuで1回抽出）         | `ANTHROPIC_API_KEY`、予算の残り |
 | `pnpm eval`      | `eval/gold/` に対して、ソース別・モデル別に抽出品質を測る（[metrics](metrics.md)） | 同上                            |
 
 どちらも、実行前に見積もり額を表示して確認を求める（`--yes` で省略できる）。

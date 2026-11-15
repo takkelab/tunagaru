@@ -1,6 +1,6 @@
 # 0006 本文ソースとモデルは、Haikuを使った評価で比較して決める
 
-- 状態: 提案（ステップ4の結果で「採用」に更新する）
+- 状態: 提案（ステップ9の結果で「採用」に更新する。時期は [ADR 0025](0025-prototype-first-then-auto-investigation.md) で変更）
 - 日付: 2026-11-15
 
 ## 背景
@@ -15,15 +15,15 @@
 
 ## 決定（暫定）
 
-- まず `claude-haiku-5-5` で、画面のないプロトタイプ（CLI）を使ってソースを比較する。
-- 比較するのは Wikidata、Wikipedia（日英）、貼り付けURL、テキスト貼り付け、Web検索（ClaudeのWeb検索ツールか、無料枠のある検索API）。
+- まず `claude-haiku-5-5` で、CLI（`pnpm eval`）を使ってソースを比較する。
+- 比較するのは Wikidata、Wikipedia（日英）、貼り付けURL、テキスト貼り付け、動画の文字起こし（[ADR 0024](0024-locate-quotes-in-source-and-video-transcripts.md)）、Web検索で見つけたURL（[ADR 0025](0025-prototype-first-then-auto-investigation.md)）。
 - 判断の基準は [metrics](../spec/metrics.md#抽出の品質)。件数の多さではなく、適合率を優先する。
 
-## ステップ4で決めること
+## ステップ9で決めること
 
 1. 採用するソースの組み合わせ（標準と「深掘り」の分け方）
-2. Web検索の提供元
-3. `third_party` の線をグラフに出すか、出す場合の見せ方
+2. Web検索の提供元（ステップ8では ClaudeのWeb検索ツールで始め、ここで無料枠のある検索APIと比べる）
+3. `third_party` の線を一覧と棚に出すか、出す場合の見せ方
 4. Haikuで精度が足りない場合の扱い（Sonnetへの切り替えか、プロンプトでの補強か）
 
 ## 検討した代替案

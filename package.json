@@ -21,13 +21,13 @@
     "check": "pnpm typecheck && pnpm lint && node tools/schema/gen.mjs --check && pnpm test",
     "cassette:record": "node tools/cassette/record.mjs",
     "test:live": "node tools/scripts/stub.mjs test:live 2",
-    "eval": "node tools/scripts/stub.mjs eval 4",
+    "eval": "node tools/scripts/stub.mjs eval 9",
     "metrics": "node tools/metrics/metrics.mjs",
-    "dev": "node tools/scripts/stub.mjs dev 7",
+    "dev": "node tools/scripts/stub.mjs dev 6",
     "cli": "node tools/scripts/stub.mjs cli 3",
-    "db:migrate": "node tools/scripts/stub.mjs db:migrate 5",
-    "db:seed:fixture": "node tools/scripts/stub.mjs db:seed:fixture 8",
-    "seed:wikidata": "node tools/scripts/stub.mjs seed:wikidata 5"
+    "db:migrate": "node tools/scripts/stub.mjs db:migrate 4",
+    "db:seed:fixture": "node tools/scripts/stub.mjs db:seed:fixture 7",
+    "seed:wikidata": "node tools/scripts/stub.mjs seed:wikidata 10"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.7",
