@@ -28,15 +28,19 @@
     "db:migrate": "node tools/scripts/stub.mjs db:migrate 4",
     "db:seed:fixture": "node tools/scripts/stub.mjs db:seed:fixture 7",
     "seed:wikidata": "node tools/scripts/stub.mjs seed:wikidata 10",
-    "spike:ux": "node spike/a-ux/serve.mjs"
+    "spike:ux": "node spike/a-ux/serve.mjs",
+    "spike:extract": "node spike/b-extraction/run.mjs"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "1.8.0",
     "@biomejs/biome": "2.6.7",
+    "@mozilla/readability": "0.6.0",
     "@playwright/test": "1.65.1",
     "@types/node": "22.20.5",
     "@vitest/coverage-v8": "5.1.0",
     "dependency-cruiser": "18.7.2",
     "lefthook": "2.2.2",
+    "linkedom": "0.18.15",
     "markdownlint-cli2": "0.24.1",
     "typescript": "6.0.3",
     "vitest": "5.1.0"

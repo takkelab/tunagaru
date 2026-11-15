@@ -21,3 +21,16 @@ pnpm spike:ux        # http://127.0.0.1:8790/ を開く
 - 引用に作り手か作品の固有名詞（別名を含む）がない根拠は使いません。
 - 表紙は iTunes Search（日本のストア。本は電子書籍）から、写真は Wikidata の肖像（P18、Wikimedia Commons）から取り、`spike/out/covers.json` にキャッシュします。Wikidata には1件ずつ問い合わせます。
 - 非表示と「気になる」は、ブラウザの localStorage にだけ保存します。非表示にしたものは、直後の「元に戻す」か、棚の下の「非表示にしたもの」から戻せます。
+
+## 試作B: 抽出（`b-extraction/`）
+
+```sh
+pnpm spike:extract --dry-run   # LLMを呼ばずに、フィルタ前後の字数・見積もり額・正解がフィルタを通るかを出す
+pnpm spike:extract             # Haiku 5.5 を呼ぶ（.env の ANTHROPIC_API_KEY を使う）
+pnpm spike:extract --only vivi # 1本だけ
+```
+
+- 入力は `spike/data/likes.json` の `sources`（記事はURLから取得し、動画は `spike/data/transcripts/` の文字起こし）。手入力の `likes` を正解として、拾えたかを数える。
+- 流れ: 本文の取得（robots.txt を確認し、Readability で段落に分ける）→ 事前フィルタ → Haiku で抽出（構造化出力）→ 位置を探す照合（完全一致、だめならあいまい一致）。
+- あいまい一致では、仕様の正規化に加えて空白を消す（自動字幕の空白の揺れを吸収するため。試作で足した規則）。
+- 結果は `spike/out/b/` に書く。`review.md` に本人が正誤をつけ、`summary.md` の数値（引用を含まない）を PR に写す。LLMの結果は `runs/` にキャッシュし、同じ本文とプロンプトでは呼ばない。合計が50円を超えそうなら止まる。
