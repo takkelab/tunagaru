@@ -82,6 +82,11 @@ main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 80px; }
 .actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
 .others { display: flex; gap: 8px; flex-wrap: wrap; }
 #cy { width: 100%; height: calc(100vh - 120px); min-height: 480px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.works { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 16px 12px; margin-top: 8px; }
+.wcard .cap .by { color: var(--accent); }
+.wact { display: flex; gap: 8px; align-items: center; font-size: 12px; margin-top: 2px; }
+.star { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; cursor: pointer; padding: 0 9px; color: var(--muted); }
+.star.on { color: var(--accent); border-color: var(--accent); }
 .graph-help { font-size: 12px; color: var(--muted); margin: 14px 0 8px; }
 .people { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 22px 18px; padding: 18px 4px 4px; }
 .pcard { cursor: pointer; position: relative; text-align: center; }
@@ -291,65 +296,106 @@ function evHtml(e, t, withWork = false) {
     <a class="go" href="${link(e)}" target="_blank" rel="noopener">${isVideo ? `▶ ${fmt(e.startSec)} から再生` : "記事のこの箇所を開く ↗"}</a>
   </div>`;
 }
-// つながり（ノード型）: 起点 → 作品 → 作り手。作品名なしの「好き」は起点 → 作り手
+// つながり（ノード型）: 点は人だけ（起点と、その人たちが好きな作り手）。
+// 線を押すと根拠（記事・動画への案内）、作り手の点を押すと作品集が開く
 let cy = null;
 const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function renderGraph() {
   if (!window.cytoscape) { $("main").innerHTML = '<p class="empty">グラフのライブラリを読み込めませんでした（ネットワークを確認してください）。</p>'; return; }
-  $("main").innerHTML = '<div class="graph-help">点を押すと根拠が開きます。ドラッグで動かせます。ホイールで拡大・縮小。</div><div id="cy"></div>';
+  $("main").innerHTML = '<div class="graph-help">線を押すと「誰がどこで語ったか」、人を押すとその人の作品集が開きます。ドラッグで動かせます。</div><div id="cy"></div>';
   let ts = visible();
   if (S.onlyOverlap) ts = ts.filter((t) => overlapN(t.c.id) >= 2);
   const nodes = new Map(); const edges = new Map();
-  const addNode = (id, data) => { if (!nodes.has(id)) nodes.set(id, { data: { id, ...data } }); };
-  const addEdge = (a, b, kind) => { const id = `${a}->${b}`; if (!edges.has(id)) edges.set(id, { data: { id, source: a, target: b, kind } }); };
   for (const t of ts) {
     const sd = seed(t.like.seed);
-    addNode(`s:${sd.id}`, { label: sd.name, kind: "seed", seed: sd.id });
-    addNode(`c:${t.c.id}`, { label: t.c.name, kind: "creator", likeId: t.like.id, name: t.c.name, aliases: t.c.aliases, n: overlapN(t.c.id) });
-    if (t.work) {
-      const wid = `w:${t.c.id}|${t.work}`;
-      addNode(wid, { label: `『${t.work}』`, kind: "work", tile: t.key, domain: t.c.domain, work: t.work, cname: t.c.name });
-      addEdge(`s:${sd.id}`, wid, "like");
-      addEdge(wid, `c:${t.c.id}`, "by");
-    } else {
-      addEdge(`s:${sd.id}`, `c:${t.c.id}`, "like");
-    }
+    const sid = `s:${sd.id}`, cidn = `c:${t.c.id}`, eid = `e:${t.like.id}`;
+    if (!nodes.has(sid)) nodes.set(sid, { data: { id: sid, label: sd.name, kind: "seed", seed: sd.id } });
+    if (!nodes.has(cidn)) nodes.set(cidn, { data: { id: cidn, label: t.c.name, kind: "creator", cid: t.c.id, n: overlapN(t.c.id) } });
+    if (!edges.has(eid)) edges.set(eid, { data: { id: eid, source: sid, target: cidn, likeId: t.like.id } });
   }
   cy = cytoscape({
     container: $("cy"),
     elements: [...nodes.values(), ...edges.values()],
     style: [
-      { selector: "node", style: { label: "data(label)", "font-size": 11, color: cssVar("--ink"), "text-valign": "bottom", "text-margin-y": 5, "text-wrap": "wrap", "text-max-width": 110, "font-family": "Hiragino Sans, Yu Gothic UI, Meiryo, sans-serif" } },
-      { selector: 'node[kind = "seed"]', style: { "background-color": cssVar("--accent"), width: 46, height: 46, "font-size": 14, "font-weight": 700, "text-valign": "center", "text-margin-y": 0, color: "#fff", "text-outline-color": cssVar("--accent"), "text-outline-width": 2 } },
-      { selector: 'node[kind = "work"]', style: { shape: "round-rectangle", width: 44, height: 64, "background-color": cssVar("--accent-soft"), "border-width": 1, "border-color": cssVar("--line") } },
-      { selector: 'node[kind = "creator"]', style: { width: 40, height: 40, "background-color": cssVar("--accent-soft"), "border-width": 2, "border-color": cssVar("--line") } },
-      { selector: 'node[kind = "creator"][n >= 2]', style: { "border-color": cssVar("--accent"), "border-width": 3 } },
+      { selector: "node", style: { label: "data(label)", "font-size": 12, color: cssVar("--ink"), "text-valign": "bottom", "text-margin-y": 6, "text-wrap": "wrap", "text-max-width": 120, "font-family": "Hiragino Sans, Yu Gothic UI, Meiryo, sans-serif" } },
+      { selector: 'node[kind = "seed"]', style: { "background-color": cssVar("--accent"), width: 54, height: 54, "font-size": 14, "font-weight": 700 } },
+      { selector: 'node[kind = "creator"]', style: { width: 50, height: 50, "background-color": cssVar("--accent-soft"), "border-width": 2, "border-color": cssVar("--line") } },
+      { selector: 'node[kind = "creator"][n >= 2]', style: { "border-color": cssVar("--accent"), "border-width": 4 } },
       { selector: "node[img]", style: { "background-image": "data(img)", "background-fit": "cover", "background-image-crossorigin": "null" } },
-      { selector: "edge", style: { width: 1.6, "line-color": cssVar("--accent"), opacity: 0.55, "curve-style": "bezier", "target-arrow-shape": "triangle", "target-arrow-color": cssVar("--accent"), "arrow-scale": 0.7 } },
-      { selector: 'edge[kind = "by"]', style: { width: 1, "line-color": cssVar("--muted"), "line-style": "dashed", "target-arrow-shape": "none", opacity: 0.45 } },
+      { selector: "edge", style: { width: 3, "line-color": cssVar("--accent"), opacity: 0.5, "curve-style": "bezier", "target-arrow-shape": "triangle", "target-arrow-color": cssVar("--accent"), "arrow-scale": 0.9 } },
+      { selector: "edge.hover", style: { opacity: 1, width: 5 } },
     ],
-    layout: { name: "cose", animate: false, nodeRepulsion: 9000, idealEdgeLength: 70, nodeOverlap: 20, padding: 30, randomize: true },
+    layout: { name: "cose", animate: false, nodeRepulsion: 12000, idealEdgeLength: 90, padding: 40, randomize: true },
   });
+  cy.on("mouseover", "edge", (e) => { e.target.addClass("hover"); $("cy").style.cursor = "pointer"; });
+  cy.on("mouseout", "edge", (e) => { e.target.removeClass("hover"); $("cy").style.cursor = ""; });
+  cy.on("tap", "edge", (e) => openPerson(e.target.data("likeId")));
   cy.on("tap", "node", (e) => {
     const d = e.target.data();
-    if (d.kind === "seed") location.hash = `#/seed/${d.seed}`;
-    else if (d.kind === "work") openDrawer(d.tile);
-    else openPerson(d.likeId);
-  });
-  // 画像はあとから読み込む（表紙と写真のキャッシュを共有する）
-  cy.nodes('[kind = "work"]').forEach(async (n) => {
-    const d = n.data();
-    const r = await fetch(`/cover?domain=${d.domain}&title=${encodeURIComponent(d.work)}&creator=${encodeURIComponent(d.cname)}`).then((x) => x.json()).catch(() => null);
-    if (r?.url) n.data("img", r.url);
+    if (d.kind === "seed") openSeedPanel(d.seed); else openWorks(d.cid);
   });
   cy.nodes('[kind = "creator"]').forEach(async (n) => {
-    const d = n.data();
-    const q = `name=${encodeURIComponent(d.name)}${d.aliases.map((a) => `&alt=${encodeURIComponent(a)}`).join("")}`;
-    const r = await fetch(`/portrait?${q}`).then((x) => x.json()).catch(() => null);
+    const r = await fetch(`/portrait?${portraitQuery(creator(n.data("cid")))}`).then((x) => x.json()).catch(() => null);
     if (r?.url) n.data("img", r.url);
   });
 }
-const reopen = (k) => (k.startsWith("p:") ? openPerson(k.slice(2)) : openDrawer(k));
+const portraitQuery = (c) => `name=${encodeURIComponent(c.name)}${c.aliases.map((x) => `&alt=${encodeURIComponent(x)}`).join("")}`;
+
+// 起点の点: その人が好きな人の一覧（押すと線と同じ根拠を開く）
+function openSeedPanel(seedId) {
+  const sd = seed(seedId);
+  const likes = [...new Map(visible().filter((t) => t.like.seed === seedId).map((t) => [t.like.id, t])).values()];
+  openKey = null;
+  $("drawer").innerHTML = '<button class="close" data-close>×</button>'
+    + '<div class="d-title">' + esc(sd.name) + '</div><div class="d-sub">' + esc(sd.role) + '</div>'
+    + '<div class="sec">' + esc(sd.name) + ' が好きな人</div><div class="others">'
+    + likes.map((t) => `<button class="btn" data-person="${esc(t.like.id)}">${esc(t.c.name)}</button>`).join("") + '</div>';
+  $("drawer").classList.add("open"); $("scrim").classList.add("open");
+}
+
+// 作り手の点: 作品集。好きな人たちが挙げた作品を先に、その後に iTunes から集めた作品を並べる
+function workCard(c, w, by) {
+  const ck = `${c.id}|${w.title}`;
+  const shop = c.domain === "music" ? "Spotify" : "Amazon";
+  return '<div class="wcard"><div class="cover' + (c.domain === "music" ? " music" : "") + '">'
+    + (w.img ? `<img src="${esc(w.img)}" alt="">` : `<div class="ph">${esc(w.title)}</div>`) + '</div>'
+    + '<div class="cap"><b>『' + esc(w.title) + '』</b>'
+    + (by ? `<span class="by">${esc(by.join("・"))} が挙げた</span>` : `<span>${esc(w.year || "")}</span>`) + '</div>'
+    + '<div class="wact"><button class="star' + (S.curious[ck] ? " on" : "") + '" data-star="' + esc(ck) + '" data-img="' + esc(w.img || "") + '">' + (S.curious[ck] ? "★" : "☆") + '</button>'
+    + '<a href="' + shopUrl(c, w.title) + '" target="_blank" rel="noopener">' + shop + ' ↗</a></div></div>';
+}
+const sameTitle = (x, y) => x.includes(y) || y.includes(x);
+async function openWorks(cid) {
+  const c = creator(cid);
+  openKey = `w:${cid}`;
+  const byTitle = new Map();
+  for (const t of visible().filter((x) => x.c.id === cid && x.work)) {
+    if (!byTitle.has(t.work)) byTitle.set(t.work, []);
+    byTitle.get(t.work).push(seed(t.like.seed).name);
+  }
+  const fans = [...new Map(visible().filter((t) => t.c.id === cid).map((t) => [t.like.id, t.like])).values()];
+  const wiki = `https://ja.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(c.name)}`;
+  const head = '<button class="close" data-close>×</button><div class="d-head">' + avatarHtml(c) + '<div>'
+    + '<div class="d-title">' + esc(c.name) + '</div><div class="d-sub">' + kindOf(c) + '</div>'
+    + '<div class="links"><a class="btn" href="' + wiki + '" target="_blank" rel="noopener">Wikipedia ↗</a></div></div></div>'
+    + '<div class="sec">この人を好きな人</div><div class="others">'
+    + fans.map((l) => `<button class="btn" data-person="${esc(l.id)}">${esc(seed(l.seed).name)} の言葉</button>`).join("") + '</div>'
+    + '<div class="actions"><button class="btn" disabled>この人の好きな人を調べる</button><span class="hint">試作B・C（抽出と自動調査）でつなぐ予定</span></div>';
+  const draw = (list, loading) => {
+    if (openKey !== `w:${cid}`) return;
+    const picked = [...byTitle.keys()].map((title) => ({ title, img: list.find((w) => sameTitle(w.title, title))?.img ?? coverCache[`${c.domain}|${title}|${c.name}`] ?? null }));
+    const rest = list.filter((w) => !picked.some((x) => sameTitle(w.title, x.title)));
+    $("drawer").innerHTML = head
+      + (picked.length ? `<div class="sec">好きな人たちが挙げた作品</div><div class="works">${picked.map((w) => workCard(c, w, byTitle.get(w.title))).join("")}</div>` : "")
+      + '<div class="sec">作品集</div>'
+      + (loading ? '<p class="empty">作品を探しています…</p>' : `<div class="works">${rest.map((w) => workCard(c, w)).join("") || '<p class="empty">見つかりませんでした</p>'}</div>`);
+  };
+  draw([], true);
+  $("drawer").classList.add("open"); $("scrim").classList.add("open");
+  const res = await fetch(`/works?domain=${c.domain}&${portraitQuery(c)}`).then((r) => r.json()).catch(() => ({ works: [] }));
+  draw(res.works, false);
+}
+const reopen = (k) => (k.startsWith("p:") ? openPerson(k.slice(2)) : k.startsWith("w:") ? openWorks(k.slice(2)) : openDrawer(k));
 function hiddenSection(ts) {
   if (!ts.length) return "";
   return `<details class="hidden-list"><summary>非表示にしたもの（${ts.length}件）</summary>
@@ -359,10 +405,14 @@ const hiddenTiles = (seedId) => allTiles().filter((t) => S.hidden[t.key] && (!se
 function renderHome() { $("main").innerHTML = (D.seeds.map(personSection).join("") || '<p class="empty">重なっているものはまだありません。</p>') + hiddenSection(hiddenTiles()); }
 function renderSeed(id) { $("main").innerHTML = personSection(seed(id)) + peopleSection(seed(id)) + hiddenSection(hiddenTiles(id)); }
 function renderCurious() {
-  const ts = visible().filter((t) => t.work && S.curious[`${t.c.id}|${t.work}`]);
-  const uniq = [...new Map(ts.map((t) => [`${t.c.id}|${t.work}`, t])).values()];
-  $("main").innerHTML = `<section class="person"><div class="person-head"><a href="#/curious">気になる作品</a><small>☆を付けた作品</small></div>
-    <div class="shelf">${uniq.map(tileHtml).join("") || '<p class="empty">まだありません。表紙を押して☆を付けてください。</p>'}</div></section>`;
+  const items = Object.entries(S.curious).sort((x, y) => (y[1].at ?? y[1]) - (x[1].at ?? x[1]));
+  const cards = items.map(([k, v]) => {
+    const [cid, title] = k.split("|");
+    const c = creator(cid);
+    return workCard(c, { title, img: v.img || coverCache[`${c.domain}|${title}|${c.name}`] || null, year: c.name });
+  }).join("");
+  $("main").innerHTML = '<section class="person"><div class="person-head"><a href="#/curious">気になる作品</a><small>☆を付けた作品</small></div>'
+    + '<div class="works">' + (cards || '<p class="empty">まだありません。作品集や表紙から☆を付けてください。</p>') + '</div></section>';
 }
 
 let openKey = null;
@@ -415,7 +465,7 @@ document.addEventListener("click", (ev) => {
   else if (t.dataset.person) openPerson(t.dataset.person);
   else if (t.dataset.hidePerson) hidePerson(t.dataset.hidePerson);
   else if (t.dataset.unhidePerson) unhidePerson(t.dataset.unhidePerson);
-  else if (t.dataset.star) { const k = t.dataset.star; if (S.curious[k]) delete S.curious[k]; else S.curious[k] = Date.now(); save(); const o = openKey; render(); if (o) reopen(o); }
+  else if (t.dataset.star) { const k = t.dataset.star; if (S.curious[k]) delete S.curious[k]; else S.curious[k] = { at: Date.now(), img: t.dataset.img || null }; save(); const o = openKey; render(); if (o) reopen(o); }
   else if (t.dataset.hide) hide(t.dataset.hide);
   else if (t.dataset.unhide) unhide(t.dataset.unhide);
   else if (t.dataset.close !== undefined) closeDrawer();

@@ -128,8 +128,50 @@ async function portrait(params) {
   return cache[key];
 }
 
+// 作品集: iTunes Search で作り手の電子書籍かアルバムを集める。
+// 作り手の名前（別名を含む）が artistName に入っているものだけを残し、題名で重複を除く
+async function works(params) {
+  const domain = params.get("domain");
+  const names = [params.get("name") ?? "", ...params.getAll("alt")].filter(Boolean);
+  const key = `works|${domain}|${names[0]}`;
+  if (key in cache) return cache[key];
+  const media =
+    domain === "music" ? "media=music&entity=album&attribute=artistTerm" : "media=ebook";
+  const out = new Map();
+  try {
+    for (const n of names) {
+      const url = `https://itunes.apple.com/search?country=JP&limit=50&${media}&term=${encodeURIComponent(n)}`;
+      const results = (await queued(() => getJson(url))).results ?? [];
+      for (const r of results) {
+        const artist = (r.artistName ?? "").replace(/\s/g, "");
+        if (!names.some((x) => artist.includes(x.replace(/\s/g, "")))) continue;
+        const title = (r.collectionName ?? r.trackName ?? "").replace(/\s*[-–(（].*$/, "").trim();
+        if (!title || out.has(title)) continue;
+        out.set(title, {
+          title,
+          img: r.artworkUrl100?.replace("100x100bb", "400x400bb") ?? null,
+          year: (r.releaseDate ?? "").slice(0, 4),
+        });
+      }
+      if (out.size >= 12) break;
+    }
+  } catch (e) {
+    process.stdout.write(`作品集の取得に失敗: ${names[0]} ${e.message}\n`);
+    return [];
+  }
+  cache[key] = [...out.values()].slice(0, 24);
+  await mkdir(dirname(cacheFile), { recursive: true });
+  await writeFile(cacheFile, JSON.stringify(cache, null, 2));
+  return cache[key];
+}
+
 createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://127.0.0.1");
+  if (url.pathname === "/works") {
+    const body = JSON.stringify({ works: await works(url.searchParams) });
+    res.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(body);
+    return;
+  }
   if (url.pathname === "/portrait") {
     const body = JSON.stringify((await portrait(url.searchParams)) ?? { url: null });
     res.writeHead(200, { "content-type": "application/json; charset=utf-8" }).end(body);
