@@ -74,14 +74,15 @@ async function cover(params) {
 }
 
 // 人の写真: Wikidata で名前を検索し、人物（Q5）か音楽グループの項目のうち、
-// 検索順で最初に肖像（P18）を持つものを使う。画像は Wikimedia Commons から縮小して表示する
+// 検索順で最初のものの肖像（P18）を使う。名前が見出しと一致したものだけを候補にする。画像は Wikimedia Commons から縮小して表示する
 const PERSON_OR_GROUP = new Set(["Q5", "Q215380", "Q5741069", "Q2088357", "Q105543609"]);
 const WD = "https://www.wikidata.org/w/api.php?format=json&origin=*";
 async function wikidataPortrait(name) {
   const search = await getJson(
     `${WD}&action=wbsearchentities&language=ja&uselang=ja&type=item&limit=7&search=${encodeURIComponent(name)}`,
   );
-  const ids = (search.search ?? []).map((r) => r.id);
+  // 別名で当たっただけの項目は使わない（例: 「MICO」が別名の別人）。無理そうなら画像なしにする
+  const ids = (search.search ?? []).filter((r) => r.match?.type === "label").map((r) => r.id);
   if (!ids.length) return null;
   const ents = (await getJson(`${WD}&action=wbgetentities&props=claims&ids=${ids.join("|")}`))
     .entities;
