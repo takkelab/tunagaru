@@ -46,6 +46,7 @@
 | `GET /api/investigations/:id`            | ジョブの状態                                             | なし                                                                                                | `{ state, stage, droppedQuotes, newEdges, newOverlaps, costJpy, error? }`                      |
 | `GET /api/queues/resolution`             | 名寄せ待ちの一覧                                         | `limit`, `cursor`                                                                                   | `{ items: { edge, rawName, candidates }[] }`                                                   |
 | `POST /api/edges/:id/resolve`            | 名寄せ待ちの相手を確定する                               | `{ entityId, addAlias? }`、`{ createLocal: { displayName, kind } }`、`{ discard: true }` のいずれか | `EdgeDetail`                                                                                   |
+| `POST /api/entities/:id/aliases`         | 別名を追加する（名寄せ待ちのうち一致するものを確定する） | `{ name, lang }`                                                                                    | `{ entity: Entity, resolvedEdges: number }`                                                    |
 | `POST /api/entities/:id/merge`           | `:id` を `into` に統合する（ステップ10）                 | `{ into }`                                                                                          | 統合先の `Entity`                                                                              |
 | `GET /api/budget`                        | 当月の予算                                               | なし                                                                                                | `{ month, limitJpy, settledJpy, reservedJpy, remainingJpy, rate, avgPerJobJpy, cacheHitRate }` |
 | `GET /api/settings`、`PUT /api/settings` | 設定                                                     | `{ model, jpyPerUsd, monthlyLimitJpy, showPastLike, bookLink, musicLink }`                          | 同じ                                                                                           |
@@ -65,7 +66,7 @@
 | { kind: "paste", text, label?, url? }
 | { kind: "transcript", videoUrl, text }      // 動画の文字起こし（data: 文字起こし）
 | { kind: "search", maxQueries }              // ステップ8
-| { kind: "wikipedia", lang: "ja" | "en" }    // ステップ10
+| { kind: "wikipedia", lang: "ja" | "en" }    // ステップ9
 ```
 
 調査は非同期で行う。webは `GET /api/investigations/:id` を1秒間隔でポーリングする（SSEは使わない。単純さを優先する）。
