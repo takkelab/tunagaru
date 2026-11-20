@@ -11,7 +11,7 @@ DBはSQLite（better-sqlite3＋Drizzle）。DBを触ってよいのは `src/adap
 | `alias`          | `entity_id`, `name`, `lang`                                                                                                                                                                                 | 別名（表記揺れ、ペンネーム、各言語の名前、自動字幕の誤記）                                                                |
 | `membership`     | `group_id`, `person_id`, `role?`                                                                                                                                                                            | グループの所属                                                                                                            |
 | `work`           | `id`, `title`, `wikidata_qid?`, `created_at`                                                                                                                                                                | 作品。ノードにはしないが、独立した記録として持つ（[ADR 0023](../decisions/0023-works-as-records-overlaps-by-creator.md)） |
-| `work_creator`   | `work_id`, `entity_id`, `role`（`author`／`lyricist`／`composer`／`performer`）                                                                                                                             | 作品と作り手の多対多                                                                                                      |
+| `work_creator`   | `work_id`, `entity_id`, `role`（`author`／`lyricist`／`composer`／`performer`／`director`）                                                                                                                 | 作品と作り手の多対多                                                                                                      |
 | `work_mark`      | `work_id`, `created_at`                                                                                                                                                                                     | 本人が「気になる」を付けた作品。マークはこの1種類だけ（[ADR 0022](../decisions/0022-overlaps-of-seed-people-as-core.md)） |
 | `source_doc`     | `id`, `kind`（`url`／`paste`／`transcript`／`wikipedia`）, `url?`, `video_id?`, `found_by`（`manual`／`search`）, `title?`, `lang`, `content_hash`, `text_path`, `timeline_path?`, `fetched_at`             | 抽出に使った本文。全文は `text_path` のファイルにのみ保存する。`transcript` は動画の文字起こしで、`url` は動画のURL       |
 | `edge`           | `id`, `subject_id`, `object_id`, `polarity`, `attribution`, `status`, `origin`（`wikidata`／`llm`／`manual`）, `created_at`, `updated_at`                                                                   | 「subjectがobjectを好き」という線                                                                                         |
@@ -34,6 +34,15 @@ DBはSQLite（better-sqlite3＋Drizzle）。DBを触ってよいのは `src/adap
 | `past_like`        | 昔は好きだった     | 既定では出さない（設定で切り替え） |
 | `dislikes`         | 嫌い、苦手         | 出さない                           |
 | `denies_influence` | 影響を否定している | 出さない                           |
+
+### 「好き」にするもの・しないもの
+
+[ADR 0026](../decisions/0026-sensibility-shelf-first-and-wider-likes.md)。抽出のプロンプトに書き、プロンプトのスナップショットで固定する。
+
+- 対象は、本・音楽・映画・マンガの作り手。映画は監督、マンガは作者への線にし、作品を根拠に添える。
+- 記事の企画で本人が選んだ曲（プレイリスト、選曲）は `likes` にする。
+- 一緒に仕事をした相手（共演者、監督、プロデューサーなど）を褒めるだけの発言は、抽出しない。仕事をする前から好きだったと分かる発言（「昔から」「ファンで」「憧れていた」など）は `likes` にする。
+- 人柄を褒める発言（「相方の好きなところ」など）は、抽出しない。
 
 ### attribution（発言者）
 
@@ -83,10 +92,10 @@ LLMの出力は、構造化出力で次の形に固定する（スキーマは `
 
 ## 文字起こし
 
-[ADR 0024](../decisions/0024-locate-quotes-in-source-and-video-transcripts.md)
+[ADR 0024](../decisions/0024-locate-quotes-in-source-and-video-transcripts.md)。試作品のあと、ステップ12で実装する（[ADR 0026](../decisions/0026-sensibility-shelf-first-and-wider-likes.md)）。
 
 - 入力は、動画のURLと、YouTube の「文字起こしを表示」からコピーした文字列。
-- タイムスタンプの行（`0:00`、`12:34`、`1:02:03` の形）と、その後に続く発言の行を組にして読む。タイムスタンプのない行は、直前の組の発言に続けてつなぐ。
+- タイムスタンプの行（`0:00`、`12:34`、`1:02:03` の形）と、その後に続く発言の行を組にして読む。タイムスタンプのない行は、直前の組の発言に続けてつなぐ。1行が「`0:16`」「`16 秒`」「発言」の連結になっている形（コピーのしかたによって起きる。試作Bで確認）も読む。
 - 本文は、発言だけを改行でつないだものにする（`text_path` に保存する）。タイムスタンプは、「本文中の開始位置 → 秒」の対応表として `timeline_path`（`data/texts/<content_hash>.timeline.json`）に保存する。
 - 根拠の `start_sec` は、`span_start` を含む組の秒とする。根拠のリンクは、動画のURLに `t=<start_sec>s` を付けたものにする。
 - `video_id` は、動画のURL（`youtube.com/watch?v=`、`youtu.be/` など）から取り出す。取り出せなければ、タイムスタンプのリンクは作らず、URLだけを出す。
@@ -112,7 +121,7 @@ LLMの出力は、構造化出力で次の形に固定する（スキーマは `
 
 1. 作品名（`work_title`）だけでは決めない。相手の主体が確定してから行う。
 2. ローカルDBで、その主体を作り手に持ち、正規化後の題名が一致する作品があれば、それを使う。
-3. なければ、作品名で Wikidata を検索し、作り手（P50 著者、P676 作詞者、P86 作曲者、P175 演奏者）がその主体である候補に絞る。1件に決まれば作品を作る。
+3. なければ、作品名で Wikidata を検索し、作り手（P50 著者、P676 作詞者、P86 作曲者、P175 演奏者、P57 監督）がその主体である候補に絞る。マンガの作者は P50 で取る。1件に決まれば作品を作る。
 4. 決まらなければ、作品のない根拠として保存し、`work_title_raw` に作品名を残す（線そのものは作る）。作品の確定は、後でS4から行える。
 
 ### 統合（merge）
@@ -141,7 +150,7 @@ LLMの出力は、構造化出力で次の形に固定する（スキーマは `
 
 LLMに送る前に、本文から次の語を含む段落と、その前後1段落だけを抜き出す。文字起こしでは、語を含む発言の組の前後60秒に入る組をすべて抜き出す（字幕の1行は数秒分しかなく、話が何行にもまたがるため）。語の一覧は `src/domain/` に定数として持ち、テストで固定する。
 
-- 日本語: 影響, 好き, 愛読, 憧れ, ファン, 敬愛, 尊敬, 心酔, 傾倒, 夢中, 聴いて, 読んで, ベスト, 愛聴
+- 日本語: 影響, 好き, 愛読, 憧れ, ファン, 敬愛, 尊敬, 心酔, 傾倒, 夢中, 聴いて, 読んで, 観て, ベスト, 愛聴, 選曲, プレイリスト
 - 英語: influence, influenced, favorite, favourite, fan of, admire, inspired, idol, hero, love, loved
 
 該当する段落がなければ、LLMを呼ばずに「抽出0件」で終える（費用ゼロ）。
